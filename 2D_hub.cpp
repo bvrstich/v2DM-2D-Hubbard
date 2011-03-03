@@ -52,6 +52,12 @@ int main(int argc,char *argv[]){
 
    tpm.out_sp("../spin_pd-bright/tpm.in");
 
+   TPM Q;
+   Q.Q(1,tpm);
+
+   BlockVector<TPM> v(Q);
+   cout << v;
+
 /*
    SUP S(M,N);
    S.init_S();
