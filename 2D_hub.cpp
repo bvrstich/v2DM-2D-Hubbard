@@ -46,6 +46,7 @@ int main(int argc,char *argv[]){
    //initialize the statics
    Hamiltonian::init(L);
    TPM::init(L,N);
+   PHM::init(L,N);
    SPM::init(L,N);
    SUP::init(L,N);
    EIG::init(L,N);
@@ -216,6 +217,7 @@ int main(int argc,char *argv[]){
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
 
+   PHM::clear();
    TPM::clear();
    Hamiltonian::clear();
 

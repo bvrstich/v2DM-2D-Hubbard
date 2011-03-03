@@ -110,8 +110,10 @@ class TPM : public BlockMatrix {
 
    private:
 
+      //!static list that takes in a tp index i and a blockindex B, and returns two sp indices: a = t2s[B][i][0] and b = t2s[B][i][1]
       static vector< vector<int> > *t2s;
 
+      //!static list that takes two sp indices a,b and a blockindex B, and returns a tp index i: i = s2t[B][a][b]
       static int ***s2t;
 
       //!static list that takes a blockindex B and returns the tp spin S and the tp momenta K_x and K_y
@@ -122,9 +124,6 @@ class TPM : public BlockMatrix {
 
       //!list of 6j symbols needed.
       static double **_6j;
-
-      //!static counter that counts the number of TPM objects running in the program
-      static int counter;
 
       //!nr of particles
       static int N;

@@ -105,3 +105,13 @@ int Hamiltonian::gxy_a(int k_x,int k_y){
    return xy_a[k_x][k_y];
 
 }
+
+/**
+ * transform the "particle momentum" sp-index to the "hole momentum" sp-index
+ * @param a the input sp-index
+ */
+int Hamiltonian::bar(int a){
+
+   return xy_a[(-a_xy[a][0] + L)%L][(-a_xy[a][1] + L)%L];
+
+}
