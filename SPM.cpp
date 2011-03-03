@@ -3,19 +3,31 @@
 #include <cmath>
 
 using std::ostream;
+using std::cout;
 using std::endl;
 
 #include "include.h"
 
-/**
- * constructor, makes vector of dimension M/2, the SPM is completely diagonal in momentum space.
- * @param M dimension of single particle space
- * @param N nr of particles
- */
-SPM::SPM(int M,int N) : Vector(M/2) {
+int SPM::L;
+int SPM::N;
+int SPM::M;
 
-   this->M = M;
-   this->N = N;
+/**
+ * static function that initializes the static variables
+ */
+void SPM::init(int L_in,int N_in){
+
+   L = L_in;
+   N = N_in;
+
+   M = L*L*2;
+
+}
+
+/**
+ * constructor, makes vector of dimension L*L, the SPM is completely diagonal in momentum space, both in k_x and k_y.
+ */
+SPM::SPM() : Vector(L*L) {
 
 }
 
@@ -25,9 +37,6 @@ SPM::SPM(int M,int N) : Vector(M/2) {
  */
 SPM::SPM(const SPM &spm_copy) : Vector(spm_copy) {
 
-   this->M = spm_copy.gM();
-   this->N = spm_copy.gN();
-
 }
 
 /**
@@ -35,10 +44,7 @@ SPM::SPM(const SPM &spm_copy) : Vector(spm_copy) {
  * @param scale the factor u want the SPM to be scaled with (1/N-1 for normal sp density matrix)
  * @param tpm the TPM out of which the SPM will be initiated.
  */
-SPM::SPM(double scale,const TPM &tpm) : Vector(tpm.gM()/2) {
-
-   this->M = tpm.gM();
-   this->N = tpm.gN();
+SPM::SPM(double scale,const TPM &tpm) : Vector(L*L) {
 
    this->bar(scale,tpm);
 
@@ -69,10 +75,19 @@ int SPM::gM() const{
 
 }
 
+/**
+ * @return dimension of the lattice
+ */
+int SPM::gL() const{
+
+   return L;
+
+}
+
 ostream &operator<<(ostream &output,const SPM &spm_p){
 
-   for(int k = 0;k < spm_p.gn();++k)
-      output << k << "\t" << spm_p[k] << endl;
+   for(int a = 0;a < spm_p.gn();++a)
+      output << a << "\t" << spm_p[a] << endl;
 
    return output;
 
@@ -85,25 +100,29 @@ ostream &operator<<(ostream &output,const SPM &spm_p){
  */
 void SPM::bar(double scale,const TPM &tpm){
 
-   for(int k = 0;k < M/2;++k){
+   for(int a = 0;a < L*L;++a){
 
-      (*this)[k] = 0.0;
+      (*this)[a] = 0.0;
 
-      for(int B = 0;B < tpm.gnr();++B){
+      //S = 0
 
-         //p < k
-         for(int p = 0;p < k;++p)
-            (*this)[k] += tpm.gdeg(B) * tpm(B,k,p,k,p);
+      //b < a
+      for(int b = 0;b < a;++b)
+         (*this)[a] += tpm(0,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L,a,b,a,b);
 
-         //p == k: factor 2 for norm basis
-         (*this)[k] += 2.0 * tpm.gdeg(B) * tpm(B,k,k,k,k);
+      //b == a
+      (*this)[a] += 2.0*tpm(0,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(a,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(a,1))%L,a,a,a,a);
 
-         for(int p = k + 1;p < M/2;++p)
-            (*this)[k] += tpm.gdeg(B) * tpm(B,k,p,k,p);
+      //b > a
+      for(int b = a + 1;b < L*L;++b)
+         (*this)[a] += tpm(0,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L,a,b,a,b);
 
-      }
+      //S = 1
 
-      (*this)[k] *= 0.5 * scale;
+      for(int b = 0;b < L*L;++b)
+         (*this)[a] += 3.0*tpm(1,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L,a,b,a,b);
+
+      (*this)[a] *= 0.5 * scale;
 
    }
 

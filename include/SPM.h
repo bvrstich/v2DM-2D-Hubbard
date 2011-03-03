@@ -32,7 +32,7 @@ class SPM : public Vector {
    public:
       
       //constructor
-      SPM(int M,int N);
+      SPM();
 
       //copy constructor
       SPM(const SPM &);
@@ -49,15 +49,22 @@ class SPM : public Vector {
 
       int gM() const;
 
+      int gL() const;
+
       void bar(double,const TPM &);
+
+      static void init(int,int);
 
    private:
 
       //!dimension of single particle space
-      int M;
+      static int M;
 
       //!nr of particles
-      int N;
+      static int N;
+
+      //!dimension of the lattice
+      static int L;
 
 };
 

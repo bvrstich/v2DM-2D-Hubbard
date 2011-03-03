@@ -13,6 +13,7 @@ CPPSRC	= 2D_hub.cpp\
             BlockMatrix.cpp\
             Vector.cpp\
             TPM.cpp\
+            SPM.cpp\
             Hamiltonian.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)

@@ -45,9 +45,12 @@ int main(int argc,char *argv[]){
 
    Hamiltonian::init(L);
    TPM::init(L,N);
+   SPM::init(L,N);
 
-   TPM ham;
-   ham.hubbard(U);
+   TPM tpm;
+   tpm.fill_Random();
+
+   tpm.out_sp("../spin_pd-bright/tpm.in");
 
 /*
    SUP S(M,N);

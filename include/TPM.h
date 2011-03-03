@@ -52,8 +52,8 @@ class TPM : public BlockMatrix {
       //easy to access the numbers, in sp mode and blockindex
       double operator()(int B,int a,int b,int c,int d) const;
 
-      //easy to access the numbers, in sp mode and with tp spin and momentum quantumnumber
-      double operator()(int S,int K,int a,int b,int c,int d) const;
+      //easy to access the numbers, in sp mode and with tp spin and momentum quantumnumbers
+      double operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const;
 
       //geef N terug
       int gN() const;
@@ -112,8 +112,11 @@ class TPM : public BlockMatrix {
 
       static int ***s2t;
 
-      //!static list that takes a blockindex B and returns the tp spin S and the tp momenta K_x and K_y: S = block_char[B][0] , K_x = block_char[B][1], K_y = block_char[B][2]
+      //!static list that takes a blockindex B and returns the tp spin S and the tp momenta K_x and K_y
       static int **block_char;
+
+      //!static list that returns the blockindex when given the S, K_x and K_y.
+      static int ***char_block;
 
       //!list of 6j symbols needed.
       static double **_6j;

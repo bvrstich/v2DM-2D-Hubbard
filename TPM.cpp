@@ -16,6 +16,7 @@ vector< vector<int> > *TPM::t2s;
 int ***TPM::s2t;
 
 int **TPM::block_char;
+int ***TPM::char_block;
 
 double **TPM::_6j;
 
@@ -53,6 +54,17 @@ void TPM::init(int L_in,int N_in){
    for(int B = 0;B < M;++B)
       block_char[B] = new int [3];
 
+   char_block = new int ** [2];
+
+   for(int S = 0;S < 2;++S){
+
+      char_block[S] = new int * [L];
+
+      for(int x = 0;x < L;++x)
+         char_block[S][x] = new int [L];
+
+   }
+
    vector<int> v(2);
 
    int block = 0;
@@ -71,6 +83,8 @@ void TPM::init(int L_in,int N_in){
          block_char[block][1] = K_x;
          block_char[block][2] = K_y;
 
+         char_block[0][K_x][K_y] = block;
+
          for(int a = 0;a < L*L;++a)
             for(int b = a;b < L*L;++b){
 
@@ -84,6 +98,8 @@ void TPM::init(int L_in,int N_in){
                   s2t[block][a][b] = t;
                   s2t[block][b][a] = t;
 
+                  ++t;
+
                }
 
             }
@@ -94,6 +110,8 @@ void TPM::init(int L_in,int N_in){
          block_char[L*L + block][0] = 1;
          block_char[L*L + block][1] = K_x;
          block_char[L*L + block][2] = K_y;
+
+         char_block[1][K_x][K_y] = L*L + block;
 
          for(int a = 0;a < L*L;++a)
             for(int b = a + 1;b < L*L;++b){
@@ -107,6 +125,8 @@ void TPM::init(int L_in,int N_in){
 
                   s2t[L*L + block][a][b] = t;
                   s2t[L*L + block][b][a] = t;
+
+                  ++t;
 
                }
 
@@ -156,6 +176,17 @@ void TPM::clear(){
       delete [] _6j[S];
 
    delete [] _6j;
+
+   for(int S = 0;S < 2;++S){
+
+      for(int x = 0;x < L;++x)
+         delete [] char_block[S][x];
+
+      delete [] char_block[S];
+
+   }
+
+   delete [] char_block;
 
 }
 
@@ -247,7 +278,7 @@ double TPM::operator()(int B,int a,int b,int c,int d) const{
    if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%L != K_x)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%L != K_y)
+   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%L != K_y)
       return 0;
 
    if(S == 0){
@@ -259,6 +290,66 @@ double TPM::operator()(int B,int a,int b,int c,int d) const{
 
    }
    else{
+
+      if( (a == b) || (c == d) )
+         return 0;
+      else{
+
+         int i = s2t[B][a][b];
+         int j = s2t[B][c][d];
+
+         int phase = 1;
+
+         if(a > b)
+            phase *= -1;
+         if(c > d)
+            phase *= -1;
+
+         return phase * (*this)(B,i,j);
+
+      }
+
+   }
+
+}
+/**
+ * access the elements of the the blocks in sp mode, the symmetry or antisymmetry of the blocks is automatically accounted for:\n\n
+ * Antisymmetrical for S = 1, symmetrical in the sp orbitals for S = 0\n\n
+ * @param S The tp spin quantumnumber
+ * @param K_x The tp x-momentum
+ * @param K_y The tp y-momentum
+ * @param a first sp index that forms the tp row index i of block B(S,K_x,K_y), together with b
+ * @param b second sp index that forms the tp row index i of block B(S,K_x,K_y), together with a
+ * @param c first sp index that forms the tp column index j of block B(S,K_x,K_y), together with d
+ * @param d second sp index that forms the tp column index j of block B(S,K_x,K_y), together with c
+ * @return the number on place TPM(B,i,j) with the right phase.
+ */
+double TPM::operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const{
+
+   //check if momentum is ok
+   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%L != K_x)
+      return 0;
+
+   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%L != K_y)
+      return 0;
+
+   if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%L != K_x)
+      return 0;
+
+   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%L != K_y)
+      return 0;
+
+   int B = char_block[S][K_x][K_y];
+
+   if(S == 0){
+
+      int i = s2t[B][a][b];
+      int j = s2t[B][c][d];
+
+      return (*this)(B,i,j);
+
+   }
+   else{//S = 1
 
       if( (a == b) || (c == d) )
          return 0;
@@ -370,6 +461,28 @@ void TPM::hubbard(double U){
    this->symmetrize();
 
 }
+
+/**
+ * Output to a "non-translationally invariant" file, for input in spin_pd.
+ * @param filename name and location of the file you want to print to.
+ */
+void TPM::out_sp(const char *filename) const{
+
+   ofstream output(filename);
+   output.precision(15);
+
+   for(int B = 0;B < gnr();++B){
+
+      for(int i = 0;i < gdim(B);++i)
+         for(int j = 0;j < gdim(B);++j)
+            output << block_char[B][0] << "\t" << t2s[B][i][0] << "\t" << t2s[B][i][1] << "\t" << t2s[B][j][0] << "\t" << t2s[B][j][1] 
+
+               << "\t" << (*this)(B,i,j) << endl;
+
+   }
+
+}
+
 
 /**
  * The spincoupled Q map
@@ -642,28 +755,7 @@ return cg_iter;
 
    }
  */
-/**
- * Output to a "non-translationally invariant" file, for input in spin_pd.
- * @param filename name and location of the file you want to print to.
- */
-/*
-   void TPM::out_sp(const char *filename) const{
 
-   ofstream output(filename);
-   output.precision(15);
-
-   for(int B = 0;B < gnr();++B){
-
-   for(int i = 0;i < gdim(B);++i)
-   for(int j = 0;j < gdim(B);++j)
-   output << block_char[B][0] << "\t" << t2s[B][i][0] << "\t" << t2s[B][i][1] << "\t" << t2s[B][j][0] << "\t" << t2s[B][j][1] 
-
-   << "\t" << (*this)(B,i,j) << endl;
-
-   }
-
-   }
- */
 /**
  * Fill a TPM object from a file.
  * @param input The ifstream object, corresponding to the file containing the TPM
