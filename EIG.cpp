@@ -7,18 +7,29 @@ using std::endl;
 
 #include "include.h"
 
+int EIG::M;
+int EIG::N;
+int EIG::L;
+int EIG::dim;
+
+/**
+ * initialize the statics
+ */
+void EIG::init(int L_in,int N_in){
+
+   N = N_in;
+   L = L_in;
+   M = L*L*2;
+   dim = M*(M - 1);
+
+}
+
 /**
  * standard constructor with initialization on the eigenvalues of a SUP object.
  * @param SZ input SUP object that will be destroyed after this function is called. The eigenvectors
  * of the matrix will be stored in the columns of the original SUP matrix.
  */
 EIG::EIG(SUP &SZ){
-
-   //first allocate the memory
-   this->N = SZ.gN();
-   this->M = SZ.gM();
-
-   this->dim = M*(M - 1);
 
    v_tp = new BlockVector<TPM> * [2];
 
@@ -33,11 +44,6 @@ EIG::EIG(SUP &SZ){
  * @param eig_c The input EIG that will be copied into this.
  */
 EIG::EIG(const EIG &eig_c){
-
-   this->N = eig_c.gN();
-   this->M = eig_c.gM();
-
-   this->dim = M*(M - 1);
 
    v_tp = new BlockVector<TPM> * [2];
 
@@ -106,6 +112,15 @@ int EIG::gN() const{
 int EIG::gM() const{
 
    return M;
+
+}
+
+/**
+ * @return dimension of the lattice
+ */
+int EIG::gL() const{
+
+   return L;
 
 }
 

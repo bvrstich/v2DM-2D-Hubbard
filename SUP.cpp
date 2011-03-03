@@ -8,24 +8,36 @@ using std::ifstream;
 
 #include "include.h"
 
+int SUP::M;
+int SUP::N;
+int SUP::L;
+int SUP::n_tp;
+int SUP::dim;
+
+/**
+ * Initialize the statics
+ */
+void SUP::init(int L_in,int N_in){
+
+   L = L_in;
+   N = N_in;
+   M = L*L*2;
+   n_tp = M*(M - 1)/2;
+
+   dim = 2*n_tp;
+
+}
+
 /**
  * standard constructor\n
  * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix.
- * @param M number of sp orbitals
- * @param N number of particles
  */
-SUP::SUP(int M,int N){
-
-   this->M = M;
-   this->N = N;
-   this->n_tp = M*(M - 1)/2;
+SUP::SUP(){
 
    SZ_tp = new TPM * [2];
 
    for(int i = 0;i < 2;++i)
-      SZ_tp[i] = new TPM(M,N);
-
-   this->dim = 2*n_tp;
+      SZ_tp[i] = new TPM();
 
 }
 
@@ -37,18 +49,10 @@ SUP::SUP(int M,int N){
  */
 SUP::SUP(const SUP &SZ_c){
 
-   this->M = SZ_c.M;
-   this->N = SZ_c.N;
-   this->n_tp = SZ_c.n_tp;
-   this->dim = 2*n_tp;
-
    SZ_tp = new TPM * [2];
 
    for(int i = 0;i < 2;++i)
-      SZ_tp[i] = new TPM(M,N);
-
-   (*SZ_tp[0]) = (*SZ_c.SZ_tp[0]);
-   (*SZ_tp[1]) = (*SZ_c.SZ_tp[1]);
+      SZ_tp[i] = new TPM(*SZ_c.SZ_tp[i]);
 
 }
 
@@ -201,6 +205,15 @@ int SUP::gM() const{
 }
 
 /**
+ * @return dimension of sp space
+ */
+int SUP::gL() const{
+
+   return L;
+
+}
+
+/**
  * @return dimension of tp space
  */
 int SUP::gn_tp() const{
@@ -260,9 +273,9 @@ void SUP::dscal(double alpha){
  * for more information see primal_dual.pdf
  */
 void SUP::proj_U(){
-  
+
    //eerst M_Gamma + Q(M_Q) + ( G(M_G) + T1(M_T1) + T2(M_T2) ) in O stoppen
-   TPM O(M,N);
+   TPM O;
 
    O.collaps(1,*this);
 
@@ -282,7 +295,7 @@ void SUP::proj_U(){
  */
 void SUP::proj_C(const TPM &tpm){
 
-   TPM hulp(M,N);
+   TPM hulp;
 
    hulp.collaps(1,*this);
 
@@ -290,7 +303,7 @@ void SUP::proj_C(const TPM &tpm){
 
    //Z_res is the orthogonal piece of this that will be deducted,
    //so the piece of this in the U-space - ham
-   SUP Z_res(M,N);
+   SUP Z_res;
 
    //apply iverse S to it and put it in Z_res.tpm(0)
    (Z_res.tpm(0)).S(-1,hulp);
@@ -315,7 +328,7 @@ void SUP::D(const SUP &S,const SUP &Z){
    Z_copy.sqrt(1);
 
    //links en rechts vermenigvuldigen met wortel Z
-   SUP hulp(M,N);
+   SUP hulp;
 
    hulp.L_map(Z_copy,S);
 
@@ -429,7 +442,7 @@ void SUP::fill(){
  */
 int SUP::solve(SUP &B,const SUP &D){
 
-   SUP HB(M,N);
+   SUP HB;
    HB.H(*this,D);
 
    B -= HB;
@@ -467,7 +480,7 @@ int SUP::solve(SUP &B,const SUP &D){
       B += r;
 
    }
-   
+
    return cg_iter;
 
 }
@@ -499,7 +512,7 @@ double SUP::center_dev(const SUP &Z) const{
 
    sqrt_S.sqrt(1);
 
-   SUP SZ(M,N);
+   SUP SZ;
    SZ.L_map(sqrt_S,Z);
 
    EIG eig(SZ);
@@ -531,7 +544,7 @@ double SUP::line_search(const SUP &DZ,const SUP &S,const SUP &Z,double max_dev) 
    wortel.sqrt(-1);
 
    //de L_map
-   SUP hulp(M,N);
+   SUP hulp;
    hulp.L_map(wortel,*this);
 
    //eigenwaarden in eigen_S stoppen

@@ -43,26 +43,20 @@ int main(int argc,char *argv[]){
 
    double U = atof(argv[3]);
 
+   //initialize the statics
    Hamiltonian::init(L);
    TPM::init(L,N);
    SPM::init(L,N);
+   SUP::init(L,N);
+   EIG::init(L,N);
 
-   TPM tpm;
-   tpm.fill_Random();
+   TPM ham;
+   ham.hubbard(U);
 
-   tpm.out_sp("../spin_pd-bright/tpm.in");
-
-   TPM Q;
-   Q.Q(1,tpm);
-
-   BlockVector<TPM> v(Q);
-   cout << v;
-
-/*
-   SUP S(M,N);
+   SUP S;
    S.init_S();
 
-   SUP Z(M,N);
+   SUP Z;
    Z.init_Z(10000.0,ham,S);
 
    int dim = Z.gdim();
@@ -91,7 +85,7 @@ int main(int argc,char *argv[]){
       cout << (S.tpm(0)).trace() << "\t" << pd_gap << "\t" << center_dev << "\t" << energy << "\t" << S.tpm(0).spin() << "\t";
 
       //matrix D aanmaken voor de hessiaan van het duale stelsel
-      SUP D(M,N);
+      SUP D;
       D.D(S,Z);
 
       //D inverteren voor de hessiaan van het primale stelsel
@@ -110,18 +104,18 @@ int main(int argc,char *argv[]){
       B -= Z;
 
       //collaps B onto b to construct the right hand side of the primal Newton equation
-      TPM b(M,N);
+      TPM b;
 
       b.collaps(1,B);
 
       //dit wordt de stap:
-      TPM delta(M,N);
+      TPM delta;
 
       //los het stelsel op, geeft aantal iteraties nodig terug:
       cout << delta.solve(b,D_inv) << "\t";
 
       //nog updaten van S en Z
-      SUP DS(M,N);
+      SUP DS;
 
       DS.fill(delta);
 
@@ -222,14 +216,6 @@ int main(int argc,char *argv[]){
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
 
-   TPM kinetic(M,N);
-   kinetic.hubbard(0.0);
-
-   cout << endl;
-   cout << "Square root of the trace pair:\t" << S.tpm(0).trace_pair() << endl;
-   cout << endl;
-   cout << "expectation value of the kinetic energy\t" << S.tpm(0).ddot(kinetic) << endl;
-*/
    TPM::clear();
    Hamiltonian::clear();
 

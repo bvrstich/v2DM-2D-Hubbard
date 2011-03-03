@@ -47,6 +47,8 @@ class EIG{
 
    int gM() const;
 
+   int gL() const;
+
    int gdim() const;
 
    double centerpot(double,const EIG &,double,double) const;
@@ -64,19 +66,24 @@ class EIG{
 
    double center_dev() const;
 
+   static void init(int,int);
+
    private:
 
    //!double pointer to a BlockVector<TPM> object, the eigenvalues of the P and Q part of a SUP matrix will be stored here.
    BlockVector<TPM> **v_tp;
 
    //!number of particles
-   int N;
+   static int N;
 
    //!dimension of sp space
-   int M;
+   static int M;
+
+   //!dimension of the lattice
+   static int L;
 
    //!total dimension of the EIG object
-   int dim;
+   static int dim;
 
 };
 

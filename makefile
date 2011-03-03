@@ -14,6 +14,8 @@ CPPSRC	= 2D_hub.cpp\
             Vector.cpp\
             TPM.cpp\
             SPM.cpp\
+            SUP.cpp\
+            EIG.cpp\
             Hamiltonian.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)

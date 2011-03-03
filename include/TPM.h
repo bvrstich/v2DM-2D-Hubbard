@@ -106,6 +106,8 @@ class TPM : public BlockMatrix {
 
       static void clear();
 
+      static void constr_overlap();
+
    private:
 
       static vector< vector<int> > *t2s;
@@ -132,6 +134,9 @@ class TPM : public BlockMatrix {
 
       //!dimension of the lattice
       static int L;
+
+      //!variables needed for the inverse overlapmatrix
+      static double Sa,Sc;
 
 };
 

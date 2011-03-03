@@ -36,7 +36,7 @@ class SUP{
    public:
 
       //constructor
-      SUP(int M,int N);
+      SUP();
 
       //copy constructor
       SUP(const SUP &);
@@ -69,6 +69,8 @@ class SUP{
       int gN() const;
 
       int gM() const;
+
+      int gL() const;
 
       int gn_tp() const;
 
@@ -116,22 +118,27 @@ class SUP{
 
       void in(ifstream &);
 
+      static void init(int,int);
+
    private:
 
       //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
       TPM **SZ_tp;
 
       //!number of sp orbitals
-      int M;
+      static int M;
 
       //!nr of particles
-      int N;
+      static int N;
+
+      //!dimension of the lattice
+      static int L;
 
       //!dimension of tp space
-      int n_tp;
+      static int n_tp;
 
       //!total dimension of the SUP matrix
-      int dim;
+      static int dim;
 
 };
 
