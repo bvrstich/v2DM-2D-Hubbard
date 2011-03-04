@@ -51,6 +51,17 @@ SPM::SPM(double scale,const TPM &tpm) : Vector(L*L) {
 }
 
 /**
+ * PHM constructor: Creates a SPM initialized on the "bar" of the PHM.
+ * @param scale the factor u want the SPM to be scaled with
+ * @param phm the PHM out of which the SPM will be initiated.
+ */
+SPM::SPM(double scale,const PHM &phm) : Vector(L*L) {
+
+   this->bar(scale,phm);
+
+}
+
+/**
  * destructor
  */
 SPM::~SPM(){
@@ -121,6 +132,34 @@ void SPM::bar(double scale,const TPM &tpm){
 
       for(int b = 0;b < L*L;++b)
          (*this)[a] += 3.0*tpm(1,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L,a,b,a,b);
+
+      (*this)[a] *= 0.5 * scale;
+
+   }
+
+}
+
+/**
+ * Trace out a set of indices to create the "bar" matrix of a PHM, slight difference from the bar(TPM) function (normalization of the tp basisset).
+ * @param scale the factor u want the SPM to be scaled with
+ * @param phm the PHM out of which the SPM will be filled
+ */
+void SPM::bar(double scale,const PHM &phm){
+
+   int K_x,K_y;
+
+   for(int a = 0;a < L*L;++a){
+
+      (*this)[a] = 0.0;
+
+      for(int b = 0;b < L*L;++b){
+
+         K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+         K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+         (*this)[a] += phm(0,K_x,K_y,a,b,a,b) + 3.0*phm(1,K_x,K_y,a,b,a,b);
+
+      }
 
       (*this)[a] *= 0.5 * scale;
 

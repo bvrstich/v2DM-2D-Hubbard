@@ -164,6 +164,13 @@ void TPM::constr_overlap(){
    Sa += 1.0;
    Sc += (2.0*N - M)/((N - 1.0)*(N - 1.0));
 
+#ifdef __G_CON
+
+   Sa += 4.0;
+   Sc += (2.0*N - M - 2.0)/((N - 1.0)*(N - 1.0));
+
+#endif
+
 }
 
 /**
@@ -617,6 +624,22 @@ void TPM::H(const TPM &b,const SUP &D){
 
    *this += Qb;
 
+#ifdef __G_CON
+
+   //maak G(b)
+   PHM Gb;
+   Gb.G(b);
+
+   PHM hulpje;
+
+   hulpje.L_map(D.phm(),Gb);
+
+   hulp.G(hulpje);
+
+   *this += hulp;
+
+#endif
+
    this->proj_Tr();
 
 }
@@ -644,7 +667,7 @@ int TPM::solve(TPM &b,const SUP &D){
 
    int cg_iter = 0;
 
-   while(rr > 1.0e-15){
+   while(rr > 1.0e-10){
 
       ++cg_iter;
 
@@ -717,6 +740,14 @@ void TPM::collaps(int option,const SUP &S){
    hulp.Q(1,S.tpm(1));
 
    *this += hulp;
+
+#ifdef __G_CON
+
+   hulp.G(S.phm());
+
+   *this += hulp;
+
+#endif
 
    if(option == 1)
       this->proj_Tr();
@@ -795,5 +826,95 @@ void TPM::set_S_2(){
    for(int B = L*L;B < M;++B)
       for(int i = 0;i < gdim(B);++i)
          (*this)(B,i,i) = -1.5 * (N - 2.0)/(N - 1.0) + 2.0;
+
+}
+
+/**
+ * The G down map, maps a PHM object onto a TPM object using the G map.
+ * @param phm input PHM
+ */
+void TPM::G(const PHM &phm){
+
+   SPM spm(1.0/(N - 1.0),phm);
+
+   int a,b,c,d;
+
+   //the conjugated indices
+   int a_,b_,c_,d_;
+
+   int S,K_x,K_y;
+
+   int sign;
+
+   for(int B = 0;B < gnr();++B){
+
+      S = block_char[B][0];
+
+      sign = 1 - 2*S;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
+
+         a_ = Hamiltonian::bar(a);
+         b_ = Hamiltonian::bar(b);
+
+         //tp part is only nondiagonal part
+         for(int j = i;j < gdim(B);++j){
+
+            c = t2s[B][j][0];
+            d = t2s[B][j][1];
+
+            c_ = Hamiltonian::bar(c);
+            d_ = Hamiltonian::bar(d);
+
+            (*this)(B,i,j) = 0.0;
+
+            //four ph terms:
+            //1)
+            K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(d_,0))%L;
+            K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(d_,1))%L;
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_x,K_y,a,d_,c,b_);
+
+            //2)
+            K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c_,0))%L;
+            K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c_,1))%L;
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_x,K_y,b,c_ ,d, a_);
+
+            //3)
+            K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(d_,0))%L;
+            K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(d_,1))%L;
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_x,K_y,b,d_ ,c, a_ );
+
+            //4)
+            K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c_,0))%L;
+            K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c_,1))%L;
+
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= sign * (2.0*Z + 1.0) * _6j[S][Z] * phm(Z,K_x,K_y,a,c_,d,b_);
+
+            //norm:
+            if(a == b)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+
+            if(c == d)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+
+         }
+
+         (*this)(B,i,i) += spm[a] + spm[b];
+
+      }
+
+   }
+
+   this->symmetrize();
 
 }

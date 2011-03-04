@@ -71,7 +71,7 @@ int main(int argc,char *argv[]){
    //eerst centering
    double gamma = 1.0;
 
-   double tolerance = 1.0e-10;
+   double tolerance = 1.0e-4;
 
    //flag == 0 : initiele centering run (tot op tolerance)
    //flag == 1 : doe een stap met gamma = 0

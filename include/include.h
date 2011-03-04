@@ -1,3 +1,17 @@
+//nog enkele definities:
+#ifdef PQ
+
+#define __Q_CON
+
+#endif
+
+#ifdef PQG
+
+#define __Q_CON
+#define __G_CON
+
+#endif
+
 #include "lapack.h"
 #include "Matrix.h"
 #include "BlockMatrix.h"

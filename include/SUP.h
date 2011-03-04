@@ -9,6 +9,21 @@ using std::ofstream;
 using std::ifstream;
 
 #include "TPM.h"
+#include "PHM.h"
+
+//definitions:
+#ifdef PQ
+
+#define __Q_CON
+
+#endif
+
+#ifdef PQG
+
+#define __Q_CON
+#define __G_CON
+
+#endif
 
 class EIG;
 
@@ -72,8 +87,6 @@ class SUP{
 
       int gL() const;
 
-      int gn_tp() const;
-
       int gdim() const;
 
       double ddot(const SUP &) const;
@@ -118,6 +131,14 @@ class SUP{
 
       void in(ifstream &);
 
+#ifdef __G_CON
+
+      PHM &phm();
+
+      const PHM &phm() const;
+
+#endif
+      
       static void init(int,int);
 
    private:
@@ -134,11 +155,15 @@ class SUP{
       //!dimension of the lattice
       static int L;
 
-      //!dimension of tp space
-      static int n_tp;
-
-      //!total dimension of the SUP matrix
+      //!total dimension of the SUP object
       static int dim;
+
+#ifdef __G_CON
+
+      //!pointer to the particle hole matrix
+      PHM *SZ_ph;
+
+#endif
 
 };
 

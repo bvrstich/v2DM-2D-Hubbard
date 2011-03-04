@@ -12,6 +12,7 @@ using std::vector;
 #include "BlockMatrix.h"
 
 class SUP;
+class PHM;
 
 /**
  * @author Brecht Verstichel
@@ -101,6 +102,8 @@ class TPM : public BlockMatrix {
       double trace_pair() const;
 
       void set_S_2();
+
+      void G(const PHM &);
 
       static void init(int,int);
 

@@ -40,6 +40,9 @@ class SPM : public Vector {
       //TPM constructor
       SPM(double ,const TPM &);
 
+      //PHM constructor
+      SPM(double ,const PHM &);
+
       //destructor
       virtual ~SPM();
 
@@ -52,6 +55,8 @@ class SPM : public Vector {
       int gL() const;
 
       void bar(double,const TPM &);
+
+      void bar(double,const PHM &);
 
       static void init(int,int);
 
