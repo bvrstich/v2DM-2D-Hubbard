@@ -389,3 +389,15 @@ void BlockMatrix::out(const char *filename) const{
    output << *this;
 
 }
+
+/**
+ * Seperate BlockMatrix into two BlockMatrix's, a positive and negative semidefinite part.
+ * @param p positive (plus) output part
+ * @param m negative (minus) output part
+ */
+void BlockMatrix::sep_pm(BlockMatrix &p,BlockMatrix &m){
+
+   for(int i = 0;i < nr;++i)
+      blockmatrix[i]->sep_pm(p[i],m[i]);
+
+}
