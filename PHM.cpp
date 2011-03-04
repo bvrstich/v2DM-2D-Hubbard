@@ -170,8 +170,6 @@ void PHM::clear(){
 /**
  * standard constructor: constructs BlockMatrix object with 2 blocks, for S = 0 and 1.
  * if counter == 0, allocates and constructs the lists containing the relationship between sp and ph basis.
- * @param M nr of sp orbitals
- * @param N nr of particles
  */
 PHM::PHM() : BlockMatrix(M) {
 
