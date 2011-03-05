@@ -46,11 +46,20 @@ int main(int argc,char *argv[]){
    //initialize the statics
    Hamiltonian::init(L);
    TPM::init(L,N);
+
+#ifdef __G_CON
    PHM::init(L,N);
+#endif
+
+#ifdef __T1_CON
+   DPM::init(L,N);
+#endif
+
    SPM::init(L,N);
    SUP::init(L,N);
    EIG::init(L,N);
 
+/*
    TPM ham;
    ham.hubbard(U);
 
@@ -216,8 +225,15 @@ int main(int argc,char *argv[]){
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
+*/
+#ifdef __T1_CON
+   DPM::clear();
+#endif
 
+#ifdef __G_CON
    PHM::clear();
+#endif
+
    TPM::clear();
    Hamiltonian::clear();
 
