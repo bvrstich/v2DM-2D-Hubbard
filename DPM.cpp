@@ -145,21 +145,21 @@ void DPM::init(int L_in,int N_in){
             for(int b = a + 1;b < L*L;++b)
                for(int c = b + 1;c < L*L;++c){
 
-               if( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L == K_x )
-                  if( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L == K_y ){
+                  if( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L == K_x )
+                     if( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L == K_y ){
 
-                     v[0] = 0;//S_ab
-                     v[1] = a;
-                     v[2] = b;
-                     v[3] = c;
+                        v[0] = 0;//S_ab
+                        v[1] = a;
+                        v[2] = b;
+                        v[3] = c;
 
-                     dp2s[block].push_back(v);
+                        dp2s[block].push_back(v);
 
-                     s2dp[block][0][a][b][c] = dp;
+                        s2dp[block][0][a][b][c] = dp;
 
-                     ++dp;
+                        ++dp;
 
-                  }
+                     }
 
                }
 
@@ -689,258 +689,331 @@ int DPM::get_inco(int B,int S_ab,int a,int b,int c,int *i,double *coef) const{
  * @param C term before the sp part of the map
  * @param tpm input TPM
  */
-/*
-   void DPM::T(double A,double B,double C,const TPM &tpm) {
+void DPM::T(double A,double B,double C,const TPM &tpm) {
 
-//make sp matrix out of tpm
-SPM spm(C,tpm);
+   //make sp matrix out of tpm
+   SPM spm(C,tpm);
 
-double ward = 2.0*B*tpm.trace();
+   double ward = 2.0*B*tpm.trace();
 
-int k_a,k_b,k_c,k_d,k_e,k_z;
-int S_ab,S_de;
+   int a,b,c,d,e,z;
+   int S_ab,S_de;
 
-int sign_ab,sign_de;
+   int K_x,K_y;
 
-double norm_ab,norm_de;
+   int sign_ab,sign_de;
 
-double hard;
+   double norm_ab,norm_de;
 
-//start with the S = 1/2 blocks, these are the most difficult:
-for(int B = 0;B < M/2;++B){
+   double hard;
 
-for(int i = 0;i < gdim(B);++i){
+   //start with the S = 1/2 blocks, these are the most difficult:
+   for(int B = 0;B < L*L;++B){
 
-S_ab = dp2s[B][i][0];
+      for(int i = 0;i < gdim(B);++i){
 
-k_a = dp2s[B][i][1];
-k_b = dp2s[B][i][2];
-k_c = dp2s[B][i][3];
+         S_ab = dp2s[B][i][0];
 
-sign_ab = 1 - 2*S_ab;
+         a = dp2s[B][i][1];
+         b = dp2s[B][i][2];
+         c = dp2s[B][i][3];
 
-norm_ab = 1.0;
+         sign_ab = 1 - 2*S_ab;
 
-if(k_a == k_b)
-norm_ab /= std::sqrt(2.0);
+         norm_ab = 1.0;
 
-for(int j = i;j < gdim(B);++j){
+         if(a == b)
+            norm_ab /= std::sqrt(2.0);
 
-S_de = dp2s[B][j][0];
+         for(int j = i;j < gdim(B);++j){
 
-k_d = dp2s[B][j][1];
-k_e = dp2s[B][j][2];
-k_z = dp2s[B][j][3];
+            S_de = dp2s[B][j][0];
 
-sign_de = 1 - 2*S_de;
+            d = dp2s[B][j][1];
+            e = dp2s[B][j][2];
+            z = dp2s[B][j][3];
 
-norm_de = 1.0;
+            sign_de = 1 - 2*S_de;
 
-if(k_d == k_e)
-norm_de /= std::sqrt(2.0);
+            norm_de = 1.0;
 
-hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * _6j[S_ab][S_de];
+            if(d == e)
+               norm_de /= std::sqrt(2.0);
 
-//init
-(*this)(B,i,j) = 0.0;
+            hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * _6j[S_ab][S_de];
 
-//the np + sp part
-if(i == j)
-(*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
+            //init
+            (*this)(B,i,j) = 0.0;
 
-//other parts are a bit more difficult.
+            //the np + sp part
+            if(i == j)
+               (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
 
-//tp(1)
-if(k_c == k_z)
-if(S_ab == S_de)
-(*this)(B,i,j) += A * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
+            //other parts are a bit more difficult.
 
-//tp(2)
-if(k_b == k_z){
+            //tp(1)
+            if(c == z)
+               if(S_ab == S_de){
 
-if(k_a == k_c)
-(*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
-else
-(*this)(B,i,j) += A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
+                  K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+                  K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
 
-}
+                  (*this)(B,i,j) += A * tpm(S_ab,K_x,K_y,a,b,d,e);
 
-//tp(3)
-if(k_a == k_z){
+               }
 
-   if(k_b == k_c)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_de * hard * tpm(S_de,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_e);
-   else
-      (*this)(B,i,j) += A * norm_ab * sign_de * hard * tpm(S_de,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_e);
+            //tp(2)
+            if(b == z){
 
-}
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
 
-//tp(4)
-if(k_c == k_e){
+               if(a == c)
+                  (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,K_x,K_y,a,c,d,e);
+               else
+                  (*this)(B,i,j) += A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,K_x,K_y,a,c,d,e);
 
-   if(k_d == k_z)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
-   else
-      (*this)(B,i,j) += A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
+            }
 
-}
+            //tp(3)
+            if(a == z){
 
-//tp(5)
-if(k_b == k_e){
+               K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
 
-   double hulp = 0.0;
+               if(b == c)
+                  (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_de * hard * tpm(S_de,K_x,K_y,b,c,d,e);
+               else
+                  (*this)(B,i,j) += A * norm_ab * sign_de * hard * tpm(S_de,K_x,K_y,b,c,d,e);
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_z);
+            }
 
-   //correct for norms of the tpm
-   if(k_a == k_c)
-      hulp *= std::sqrt(2.0);
+            //tp(4)
+            if(c == e){
 
-   if(k_d == k_z)
-      hulp *= std::sqrt(2.0);
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
 
-   (*this)(B,i,j) += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * hulp;
+               if(d == z)
+                  (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,K_x,K_y,a,b,d,z);
+               else
+                  (*this)(B,i,j) += A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,K_x,K_y,a,b,d,z);
 
-}
+            }
 
-//tp(6)
-if(k_a == k_e){
+            //tp(5)
+            if(b == e){
 
-   double hulp = 0.0;
+               double hulp = 0.0;
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_b + k_c)%(M/2),k_b,k_c,k_d,k_z);
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
 
-   if(k_b == k_c)
-      hulp *= std::sqrt(2.0);
+               //sum over intermediate spin
+               for(int Z = 0;Z < 2;++Z)
+                  hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_x,K_y,a,c,d,z);
 
-   if(k_d == k_z)
-      hulp *= std::sqrt(2.0);
+               //correct for norms of the tpm
+               if(a == c)
+                  hulp *= std::sqrt(2.0);
 
-   (*this)(B,i,j) += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+               if(d == z)
+                  hulp *= std::sqrt(2.0);
 
-}
+               (*this)(B,i,j) += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * hulp;
 
-//tp(7)
-if(k_c == k_d){
+            }
 
-   if(k_e == k_z)
-      (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
-   else
-      (*this)(B,i,j) += A * norm_de * sign_ab * hard * tpm(S_ab,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
+            //tp(6)
+            if(a == e){
 
-}
+               double hulp = 0.0;
 
-//tp(8)
-if(k_b == k_d){
+               K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
 
-   double hulp = 0.0;
+               //sum over intermediate spin
+               for(int Z = 0;Z < 2;++Z)
+                  hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_x,K_y,b,c,d,z);
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_a + k_c)%(M/2),k_a,k_c,k_e,k_z);
+               if(b == c)
+                  hulp *= std::sqrt(2.0);
 
-   if(k_a == k_c)
-      hulp *= std::sqrt(2.0);
+               if(d == z)
+                  hulp *= std::sqrt(2.0);
 
-   if(k_e == k_z)
-      hulp *= std::sqrt(2.0);
+               (*this)(B,i,j) += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
 
-   (*this)(B,i,j) += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+            }
 
-}
+            //tp(7)
+            if(c == d){
 
-//tp(9)
-if(k_a == k_d){
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
 
-   double hulp = 0.0;
+               if(e == z)
+                  (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * hard * tpm(S_ab,K_x,K_y,a,b,e,z);
+               else
+                  (*this)(B,i,j) += A * norm_de * sign_ab * hard * tpm(S_ab,K_x,K_y,a,b,e,z);
 
-   //sum over intermediate spin
-   for(int Z = 0;Z < 2;++Z)
-      hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,(k_b + k_c)%(M/2),k_b,k_c,k_e,k_z);
+            }
 
-   if(k_b == k_c)
-      hulp *= std::sqrt(2.0);
+            //tp(8)
+            if(b == d){
 
-   if(k_e == k_z)
-      hulp *= std::sqrt(2.0);
+               double hulp = 0.0;
 
-   (*this)(B,i,j) += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
 
-}
+               //sum over intermediate spin
+               for(int Z = 0;Z < 2;++Z)
+                  hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_x,K_y,a,c,e,z);
 
-}
-}
+               if(a == c)
+                  hulp *= std::sqrt(2.0);
 
-}
+               if(e == z)
+                  hulp *= std::sqrt(2.0);
 
-//then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
-for(int B = M/2;B < M;++B){
+               (*this)(B,i,j) += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
 
-   for(int i = 0;i < gdim(B);++i){
+            }
 
-      k_a = dp2s[B][i][1];
-      k_b = dp2s[B][i][2];
-      k_c = dp2s[B][i][3];
+            //tp(9)
+            if(a == d){
 
-      for(int j = i;j < gdim(B);++j){
+               K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
 
-         k_d = dp2s[B][j][1];
-         k_e = dp2s[B][j][2];
-         k_z = dp2s[B][j][3];
+               double hulp = 0.0;
 
-         (*this)(B,i,j) = 0.0;
+               //sum over intermediate spin
+               for(int Z = 0;Z < 2;++Z)
+                  hulp += (2*Z + 1.0) * _6j[Z][S_ab] * _6j[Z][S_de] * tpm(Z,K_x,K_y,b,c,e,z);
 
-         //np + sp part:
-         if(i == j)
-            (*this)(B,i,j) = ward - spm[k_a] - spm[k_b] - spm[k_c];
+               if(b == c)
+                  hulp *= std::sqrt(2.0);
 
-         //tp(1)
-         if(k_c == k_z)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_e);
+               if(e == z)
+                  hulp *= std::sqrt(2.0);
 
-         //tp(2)
-         if(k_b == k_z)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_e);
+               (*this)(B,i,j) += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
 
-         //tp(4)
-         if(k_c == k_e)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_d,k_z);
+            }
 
-         //tp(5)
-         if(k_b == k_e)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_d,k_z);
-
-         //tp(7)
-         if(k_c == k_d)
-            (*this)(B,i,j) += A * tpm(1,(k_a + k_b)%(M/2),k_a,k_b,k_e,k_z);
-
-         //tp(8)
-         if(k_b == k_d)
-            (*this)(B,i,j) -= A * tpm(1,(k_a + k_c)%(M/2),k_a,k_c,k_e,k_z);
-
-         //tp(9)
-         if(k_a == k_d)
-            (*this)(B,i,j) += A * tpm(1,(k_b + k_c)%(M/2),k_b,k_c,k_e,k_z);
-
+         }
       }
+
    }
 
+   //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
+   for(int B = L*L;B < M;++B){
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = dp2s[B][i][1];
+         b = dp2s[B][i][2];
+         c = dp2s[B][i][3];
+
+         for(int j = i;j < gdim(B);++j){
+
+            d = dp2s[B][j][1];
+            e = dp2s[B][j][2];
+            z = dp2s[B][j][3];
+
+            (*this)(B,i,j) = 0.0;
+
+            //np + sp part:
+            if(i == j)
+               (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
+
+            //tp(1)
+            if(c == z){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+               (*this)(B,i,j) += A * tpm(1,K_x,K_y,a,b,d,e);
+
+            }
+
+            //tp(2)
+            if(b == z){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)(B,i,j) -= A * tpm(1,K_x,K_y,a,c,d,e);
+
+            }
+
+            //tp(4)
+            if(c == e){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+               (*this)(B,i,j) -= A * tpm(1,K_x,K_y,a,b,d,z);
+
+            }
+
+            //tp(5)
+            if(b == e){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)(B,i,j) += A * tpm(1,K_x,K_y,a,c,d,z);
+
+            }
+
+            //tp(7)
+            if(c == d){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+               (*this)(B,i,j) += A * tpm(1,K_x,K_y,a,b,e,z);
+
+            }
+
+            //tp(8)
+            if(b == d){
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)(B,i,j) -= A * tpm(1,K_x,K_y,a,c,e,z);
+
+            }
+
+            //tp(9)
+            if(a == d){
+
+               K_x = (Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)(B,i,j) += A * tpm(1,K_x,K_y,b,c,e,z);
+
+            }
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
 }
 
-this->symmetrize();
-
-}
-*/
 /**
  * The T1-map: maps a TPM object (tpm) on a DPM object (*this). 
  * @param tpm input TPM
  */
-/*
-   void DPM::T(const TPM &tpm){
+
+void DPM::T(const TPM &tpm){
 
    double a = 1.0;
    double b = 1.0/(N*(N - 1.0));
@@ -948,15 +1021,14 @@ this->symmetrize();
 
    this->T(a,b,c,tpm);
 
-   }
- */
+}
+
 /** 
  * The hat function maps a TPM object tpm to a DPM object (*this) so that bar(this) = tpm,
  * The inverse of the TPM::bar function. It is a T1-like map.
  * @param tpm input TPM
  */
-/*
-   void DPM::hat(const TPM &tpm){
+void DPM::hat(const TPM &tpm){
 
    double a = 1.0/(M - 4.0);
    double b = 1.0/((M - 4.0)*(M - 3.0)*(M - 2.0));
@@ -964,27 +1036,25 @@ this->symmetrize();
 
    this->T(a,b,c,tpm);
 
-   }
- */
+}
+
 /**
  * Output to file, to be read by the spin_pd program.
  * @param filename output file
  */
-/*
-   void DPM::out_sp(const char *filename) const{
+void DPM::out_sp(const char *filename) const{
 
    ofstream output(filename);
    output.precision(15);
 
    for(int B = 0;B < gnr();++B){
 
-   for(int i = 0;i < gdim(B);++i)
-   for(int j = i;j < gdim(B);++j)
-   output << block_char[B][0] << "\t" << dp2s[B][i][0] << "\t" << dp2s[B][i][1] << "\t" << dp2s[B][i][2] << "\t" << dp2s[B][i][3] << "\t"
+      for(int i = 0;i < gdim(B);++i)
+         for(int j = i;j < gdim(B);++j)
+            output << block_char[B][0] << "\t" << dp2s[B][i][0] << "\t" << dp2s[B][i][1] << "\t" << dp2s[B][i][2] << "\t" << dp2s[B][i][3] << "\t"
 
-   << dp2s[B][j][0] << "\t" << dp2s[B][j][1] << "\t" << dp2s[B][j][2] << "\t" << dp2s[B][j][3] << "\t" << (*this)(B,i,j) << endl;
-
-   }
+               << dp2s[B][j][0] << "\t" << dp2s[B][j][1] << "\t" << dp2s[B][j][2] << "\t" << dp2s[B][j][3] << "\t" << (*this)(B,i,j) << endl;
 
    }
- */
+
+}
