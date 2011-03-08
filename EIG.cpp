@@ -13,8 +13,8 @@ int EIG::L;
 int EIG::dim;
 
 /**
- * initialize the statics
- * @param L_in the dimension of the lattice
+ * intialize the statics
+ * @param L_in dimension of the lattice
  * @param N_in the nr of particles
  */
 void EIG::init(int L_in,int N_in){
@@ -23,6 +23,7 @@ void EIG::init(int L_in,int N_in){
    N = N_in;
 
    M = L*L*2;
+
    dim = M*(M - 1);
 
 #ifdef __G_CON
@@ -30,10 +31,15 @@ void EIG::init(int L_in,int N_in){
 #endif
 
 #ifdef __T1_CON
-   dim += M*(M - 1)*(M - 2)/6;
+   dim += M*(M-1)*(M-2)/6;
+#endif
+
+#ifdef __T2_CON
+   dim += M*M*(M - 1)/2;
 #endif
 
 }
+
 
 /**
  * standard constructor with initialization on the eigenvalues of a SUP object.
@@ -48,15 +54,15 @@ EIG::EIG(SUP &SZ){
       v_tp[i] = new BlockVector<TPM>(SZ.tpm(i));
 
 #ifdef __G_CON
-
    v_ph = new BlockVector<PHM>(SZ.phm());
-
 #endif
 
 #ifdef __T1_CON
-   
    v_dp = new BlockVector<DPM>(SZ.dpm());
+#endif
 
+#ifdef __T2_CON
+   v_pph = new BlockVector<PPHM>(SZ.pphm());
 #endif
 
 }
@@ -74,15 +80,15 @@ EIG::EIG(const EIG &eig_c){
       v_tp[i] = new BlockVector<TPM>(eig_c.tpv(i));
 
 #ifdef __G_CON
-
    v_ph = new BlockVector<PHM>(eig_c.phv());
-
 #endif
 
 #ifdef __T1_CON
-
    v_dp = new BlockVector<DPM>(eig_c.dpv());
+#endif
 
+#ifdef __T2_CON
+   v_pph = new BlockVector<PPHM>(eig_c.pphv());
 #endif
 
 }
@@ -105,6 +111,12 @@ EIG &EIG::operator=(const EIG &eig_c){
 #ifdef __T1_CON
 
    *v_dp = *eig_c.v_dp;
+
+#endif
+
+#ifdef __T2_CON
+
+   *v_pph = *eig_c.v_pph;
 
 #endif
 
@@ -134,6 +146,12 @@ EIG::~EIG(){
 
 #endif
 
+#ifdef __T2_CON
+   
+   delete v_pph;
+
+#endif
+
 }
 
 /**
@@ -157,6 +175,12 @@ void EIG::diagonalize(SUP &sup){
 
 #endif
 
+#ifdef __T2_CON
+   
+   v_pph->diagonalize(sup.pphm());
+
+#endif
+
 }
 
 ostream &operator<<(ostream &output,const EIG &eig_p){
@@ -173,6 +197,12 @@ ostream &operator<<(ostream &output,const EIG &eig_p){
 #ifdef __T1_CON
    
    std::cout << eig_p.dpv() << std::endl;
+
+#endif
+
+#ifdef __T2_CON
+   
+   std::cout << eig_p.pphv() << std::endl;
 
 #endif
 
@@ -278,6 +308,30 @@ const BlockVector<DPM> &EIG::dpv() const{
 
 #endif
 
+#ifdef __T2_CON
+
+/** 
+ * get the BlockVector<PPHM> object containing the eigenvalues of the PPHM block T2 of the SUP matrix
+ * @return a BlockVector<PPHM> object containing the desired eigenvalues
+ */
+BlockVector<PPHM> &EIG::pphv(){
+
+   return *v_pph;
+
+}
+
+/** 
+ * get the BlockVector<PPHM> object containing the eigenvalues of the PPHM block T2 of the SUP matrix, const version
+ * @return a BlockVector<PPHM> object containing the desired eigenvalues
+ */
+const BlockVector<PPHM> &EIG::pphv() const{
+
+   return *v_pph;
+
+}
+
+#endif
+
 /**
  * @return total dimension of the EIG object
  */
@@ -317,6 +371,14 @@ double EIG::min() const{
 
 #endif
 
+#ifdef __T2_CON
+
+   //lowest eigenvalue of the T2 block
+   if(ward > v_pph->min())
+      ward = v_pph->min();
+
+#endif
+
    return ward;
 
 }
@@ -350,6 +412,14 @@ double EIG::max() const{
 
 #endif
 
+#ifdef __T2_CON
+
+   //highest eigenvalue of the T2 block
+   if(ward < v_pph->max())
+      ward = v_pph->max();
+
+#endif
+
    return ward;
 
 }
@@ -377,6 +447,14 @@ double EIG::center_dev() const{
    sum += v_dp->sum();
 
    log_product += v_dp->log_product();
+
+#endif
+
+#ifdef __T2_CON
+
+   sum += v_pph->sum();
+
+   log_product += v_pph->log_product();
 
 #endif
 
@@ -409,6 +487,12 @@ double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) con
 #ifdef __T1_CON
 
    ward -= v_dp->centerpot(alpha) + (eigen_Z.dpv()).centerpot(alpha);
+
+#endif
+
+#ifdef __T2_CON
+
+   ward -= v_pph->centerpot(alpha) + (eigen_Z.pphv()).centerpot(alpha);
 
 #endif
 

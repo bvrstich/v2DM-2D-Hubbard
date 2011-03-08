@@ -14,6 +14,7 @@ using std::vector;
 class SUP;
 class PHM;
 class DPM;
+class PPHM;
 
 /**
  * @author Brecht Verstichel
@@ -109,6 +110,10 @@ class TPM : public BlockMatrix {
       void bar(const DPM &);
 
       void T(const DPM &);
+
+      void bar(const PPHM &);
+
+      void T(const PPHM &);
 
       static void init(int,int);
 

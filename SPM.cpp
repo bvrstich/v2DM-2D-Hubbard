@@ -166,3 +166,66 @@ void SPM::bar(double scale,const PHM &phm){
    }
 
 }
+
+/** 
+ * This bar function maps a PPHM object directly onto a SPM object, scaling it with a factor scale
+ * @param scale the scalefactor
+ * @param pphm Input PPHM object
+ */
+void SPM::bar(double scale,const PPHM &pphm){
+
+   int K_x,K_y;
+
+   for(int c = 0;c < L*L;++c){
+
+      (*this)[c] = 0.0;
+
+      //first S = 1/2 part
+      for(int S_ab = 0;S_ab < 2;++S_ab){
+
+         for(int a = 0;a < L*L;++a){
+
+            for(int b = 0;b < a;++b){//b < a
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)[c] += pphm(0,K_x,K_y,S_ab,a,b,c,S_ab,a,b,c);
+
+            }
+
+            //a == b norm correction
+            K_x = (2*Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(c,0))%L;
+            K_y = (2*Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(c,1))%L;
+
+            (*this)[c] += 2.0 * pphm(0,K_x,K_y,S_ab,a,a,c,S_ab,a,a,c);
+
+            for(int b = a + 1;b < L*L;++b){//b > a
+
+               K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+               K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
+
+               (*this)[c] += pphm(0,K_x,K_y,S_ab,a,b,c,S_ab,a,b,c);
+
+            }
+
+         }
+      }
+
+      //then S = 3/2 part:
+      for(int a = 0;a < L*L;++a)
+         for(int b = 0;b < L*L;++b){
+
+            K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%L;
+            K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%L;
+
+            (*this)[c] += 2.0 * pphm(1,K_x,K_y,1,a,b,c,1,a,b,c);
+
+         }
+
+      //scaling
+      (*this)[c] *= scale;
+
+   }
+
+}
