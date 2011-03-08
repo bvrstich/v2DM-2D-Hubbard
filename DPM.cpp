@@ -187,6 +187,13 @@ void DPM::init(int L_in,int N_in){
                }
 
          //S = 3/2
+
+         block_char[L*L + block][0] = 1;//0 means spin 1/2
+         block_char[L*L + block][1] = K_x;
+         block_char[L*L + block][2] = K_y;
+
+         char_block[1][K_x][K_y] = L*L + block;
+
          dp = 0;
 
          //then S = 3/2, S_ab = 1, a < b < c
@@ -635,19 +642,19 @@ int DPM::get_inco(int B,int S_ab,int a,int b,int c,int *i,double *coef) const{
 
          if(b < c){//a < b < c
 
-            i[0] = s2dp[B][0][a][b][c];
+            i[0] = s2dp[B][1][a][b][c];
             coef[0] = 1;
 
          }
          else if(c < a){//c < a < b
 
-            i[0] = s2dp[B][0][c][a][b];
+            i[0] = s2dp[B][1][c][a][b];
             coef[0] = 1;
 
          }
          else{//a < c < b
 
-            i[0] = s2dp[B][0][a][c][b];
+            i[0] = s2dp[B][1][a][c][b];
             coef[0] = -1;
 
          }
@@ -657,19 +664,19 @@ int DPM::get_inco(int B,int S_ab,int a,int b,int c,int *i,double *coef) const{
 
          if(a < c){//b < a < c
 
-            i[0] = s2dp[B][0][b][a][c];
+            i[0] = s2dp[B][1][b][a][c];
             coef[0] = -1;
 
          }
          else if(c < b){//c < b < a
 
-            i[0] = s2dp[B][0][c][b][a];
+            i[0] = s2dp[B][1][c][b][a];
             coef[0] = -1;
 
          }
          else{//b < c < a
 
-            i[0] = s2dp[B][0][b][c][a];
+            i[0] = s2dp[B][1][b][c][a];
             coef[0] = 1;
 
          }

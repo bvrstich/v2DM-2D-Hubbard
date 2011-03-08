@@ -13,6 +13,7 @@ using std::vector;
 
 class SUP;
 class PHM;
+class DPM;
 
 /**
  * @author Brecht Verstichel
@@ -104,6 +105,10 @@ class TPM : public BlockMatrix {
       void set_S_2();
 
       void G(const PHM &);
+
+      void bar(const DPM &);
+
+      void T(const DPM &);
 
       static void init(int,int);
 

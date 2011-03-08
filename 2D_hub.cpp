@@ -37,12 +37,14 @@ int main(int argc,char *argv[]){
    srand(time(NULL));
 
    cout.precision(10);
-
+/*
    int L = atof(argv[1]);
    int N = atof(argv[2]);
 
    double U = atof(argv[3]);
-
+*/
+   int L = 3;
+   int N = 9;
    //initialize the statics
    Hamiltonian::init(L);
    TPM::init(L,N);
