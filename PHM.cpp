@@ -398,3 +398,80 @@ void PHM::out_sp(const char *filename) const{
    }
 
 }
+
+/**
+ * The bar function that maps a PPHM object onto a PHM object by tracing away the first pair of incdices of the PPHM
+ * @param pphm Input PPHM object
+ */
+void PHM::bar(const PPHM &pphm){
+
+   int a,b,c,d;
+
+   double ward,hard;
+
+   int S;
+
+   int K_x,K_y;
+
+   for(int B = 0;B < gnr();++B){//loop over the blocks PHM
+
+      S = block_char[B][0];
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = ph2s[B][i][0];
+         b = ph2s[B][i][1];
+
+         for(int j = i;j < gdim(B);++j){
+
+            c = ph2s[B][j][0];
+            d = ph2s[B][j][1];
+
+            //init
+            (*this)(B,i,j) = 0.0;
+
+            //first the S = 1/2 block of the PPHM matrix
+            for(int S_ab = 0;S_ab < 2;++S_ab)
+               for(int S_de = 0;S_de < 2;++S_de){
+
+                  ward = 2.0 * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) ) * _6j[S][S_ab] * _6j[S][S_de];
+
+                  for(int e = 0;e < L*L;++e){
+
+                     K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+                     K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+                     hard = ward * pphm(0,K_x,K_y,S_ab,e,a,b,S_de,e,c,d);
+
+                     //norms
+                     if(e == a)
+                        hard *= std::sqrt(2.0);
+
+                     if(e == c)
+                        hard *= std::sqrt(2.0);
+
+                     (*this)(B,i,j) += hard;
+
+                  }
+
+               }
+
+            //then the S = 3/2 block
+            if(S == 1)
+               for(int e = 0;e < L*L;++e){
+
+                  K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
+                  K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+
+                  (*this)(B,i,j) += 4.0/3.0 * pphm(1,K_x,K_y,1,e,a,b,1,e,c,d);
+
+               }
+
+         }
+      }
+
+   }
+
+   this->symmetrize();
+
+}

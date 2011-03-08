@@ -7,6 +7,7 @@ using std::ostream;
 
 #include "BlockMatrix.h"
 #include "TPM.h"
+#include "PPHM.h"
 
 /**
  * @author Brecht Verstichel
@@ -57,6 +58,8 @@ class PHM : public BlockMatrix {
       void G(const TPM &);
 
       void out_sp(const char *) const;
+
+      void bar(const PPHM &pphm);
 
       static void init(int,int);
 

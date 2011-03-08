@@ -91,6 +91,10 @@ int main(int argc,char **argv)
    DPM::init(L,N);
 #endif
 
+#ifdef __T2_CON
+   PPHM::init(L,N);
+#endif
+
    SPM::init(L,N);
    SUP::init(L,N);
    EIG::init(L,N);
@@ -225,6 +229,10 @@ int main(int argc,char **argv)
    cout << "pd gap: " << Z.ddot(X) << endl;
    cout << "dual conv: " << D_conv << endl;
    cout << "primal conv: " << P_conv << endl;
+
+#ifdef __T2_CON
+   PPHM::clear();
+#endif
 
 #ifdef __T1_CON
    DPM::clear();

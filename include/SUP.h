@@ -11,6 +11,7 @@ using std::ifstream;
 #include "TPM.h"
 #include "PHM.h"
 #include "DPM.h"
+#include "PPHM.h"
 
 #ifdef PQG
 
@@ -22,6 +23,21 @@ using std::ifstream;
 
 #define __G_CON
 #define __T1_CON
+
+#endif
+
+#ifdef PQGT2
+
+#define __G_CON
+#define __T2_CON
+
+#endif
+
+#ifdef PQGT
+
+#define __G_CON
+#define __T1_CON
+#define __T2_CON
 
 #endif
 
@@ -146,8 +162,16 @@ class SUP{
       const DPM &dpm() const;
 
 #endif
-   
-   static void init(int,int);
+
+#ifdef __T2_CON
+
+      PPHM &pphm();
+
+      const PPHM &pphm() const;
+
+#endif
+
+      static void init(int,int);
 
       void sep_pm(SUP &p,SUP &m);
 
@@ -179,6 +203,13 @@ class SUP{
       
       //!pointer tot he three particles matrix DPM
       DPM *SZ_dp;
+
+#endif
+
+#ifdef __T2_CON
+
+      //!pointer tot he three particles matrix DPM
+      PPHM *SZ_pph;
 
 #endif
 
