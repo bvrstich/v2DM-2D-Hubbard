@@ -3,8 +3,7 @@
  * This is an implementation of a primal dual interior point method
  * for optimizing the second order density matrix using the P Q G T1 and T2 N-representability conditions for the special
  * case of the 2 dimensional Hubbard model with periodic boundary condition, which means that all the symmetries for this case have been 
- * implemented.
- * The method used is a path following algorithm with predictor corrector steps.
+ * implemented. The method used is a path following algorithm with predictor corrector steps.
  * At compile time you can decide which condtions will be active compile with make PQ, PQG, PQGT1, PQGT2 or PQGT=(for all conditions).
  * @author Brecht Verstichel
  * @date 02-03-2011
@@ -37,14 +36,12 @@ int main(int argc,char *argv[]){
    srand(time(NULL));
 
    cout.precision(10);
-/*
+
    int L = atof(argv[1]);
    int N = atof(argv[2]);
 
    double U = atof(argv[3]);
-*/
-   int L = 3;
-   int N = 9;
+
    //initialize the statics
    Hamiltonian::init(L);
    TPM::init(L,N);
@@ -61,7 +58,6 @@ int main(int argc,char *argv[]){
    SUP::init(L,N);
    EIG::init(L,N);
 
-/*
    TPM ham;
    ham.hubbard(U);
 
@@ -227,7 +223,7 @@ int main(int argc,char *argv[]){
 
    //print density matrix to file
    //(S.tpm(0)).out("rdm.out");
-*/
+
 #ifdef __T1_CON
    DPM::clear();
 #endif

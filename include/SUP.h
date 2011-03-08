@@ -10,18 +10,18 @@ using std::ifstream;
 
 #include "TPM.h"
 #include "PHM.h"
-
-//definitions:
-#ifdef PQ
-
-#define __Q_CON
-
-#endif
+#include "DPM.h"
 
 #ifdef PQG
 
-#define __Q_CON
 #define __G_CON
+
+#endif
+
+#ifdef PQGT1
+
+#define __G_CON
+#define __T1_CON
 
 #endif
 
@@ -138,8 +138,16 @@ class SUP{
       const PHM &phm() const;
 
 #endif
+
+#ifdef __T1_CON
       
-      static void init(int,int);
+      DPM &dpm();
+
+      const DPM &dpm() const;
+
+#endif
+   
+   static void init(int,int);
 
    private:
 
@@ -155,13 +163,20 @@ class SUP{
       //!dimension of the lattice
       static int L;
 
-      //!total dimension of the SUP object
+      //!total dimension of the SUP matrix
       static int dim;
 
 #ifdef __G_CON
 
       //!pointer to the particle hole matrix
       PHM *SZ_ph;
+
+#endif
+
+#ifdef __T1_CON
+      
+      //!pointer tot he three particles matrix DPM
+      DPM *SZ_dp;
 
 #endif
 

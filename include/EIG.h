@@ -9,17 +9,16 @@ using std::ostream;
 #include "BlockVector.h"
 #include "SUP.h"
 
-//definitions:
-#ifdef PQ
+#ifdef PQG
 
-#define __Q_CON
+#define __G_CON
 
 #endif
 
-#ifdef PQG
+#ifdef PQGT1
 
-#define __Q_CON
 #define __G_CON
+#define __T1_CON
 
 #endif
 
@@ -82,6 +81,22 @@ class EIG{
 
 #endif
 
+#ifdef __T1_CON
+
+   BlockVector<DPM> &dpv();
+
+   const BlockVector<DPM> &dpv() const;
+
+#endif
+
+#ifdef __T2_CON
+
+   BlockVector<PPHM> &pphv();
+
+   const BlockVector<PPHM> &pphv() const;
+
+#endif
+
    double min() const;
 
    double max() const;
@@ -99,6 +114,13 @@ class EIG{
 
    //!single pointer to a BlockVector<PHM> object, the eigenvalues of G part of a SUP matrix will be stored here.
    BlockVector<PHM> *v_ph;
+
+#endif
+
+#ifdef __T1_CON
+
+   //!single pointer to a BlockVector<DPM> object, the eigenvalues of T1 part of a SUP matrix will be stored here.
+   BlockVector<DPM> *v_dp;
 
 #endif
 
