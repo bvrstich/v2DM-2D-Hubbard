@@ -33,7 +33,7 @@ MKL_ROOT =
 
 INCLUDE = -I${MKL_ROOT}/include -Iinclude
 
-LIBS= -L${MKL_ROOT}/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread
+LIBS= -L${MKL_ROOT}/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 
 CC	= icc
 CXX	= icpc
@@ -41,8 +41,8 @@ CXX	= icpc
 # -----------------------------------------------------------------------------
 #   Compiler & Linker flags
 # -----------------------------------------------------------------------------
-CFLAGS	= $(INCLUDE) -g -Wall -O2 -wd981 -ipo -xHost
-LDFLAGS	= $(LIBS) -g -Wall -O2 -wd981 -xHost
+CFLAGS	= $(INCLUDE) -g -Wall -O2 -wd981 -ipo -xHost -openmp
+LDFLAGS	= -g -Wall -O2 -wd981 -xHost -openmp
 
 # =============================================================================
 #   Targets & Rules
