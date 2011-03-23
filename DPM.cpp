@@ -714,7 +714,10 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
    double hard;
 
+#pragma omp parallel
+{
    //start with the S = 1/2 blocks, these are the most difficult:
+#pragma omp for private(a,b,c,d,e,z,S_ab,S_de,K_x,K_y,sign_ab,sign_de,norm_ab,norm_de,hard) nowait
    for(int B = 0;B < L*L;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -916,6 +919,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
    }
 
    //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
+#pragma omp for private(a,b,c,d,e,z,S_ab,S_de,K_x,K_y,sign_ab,sign_de,norm_ab,norm_de,hard) nowait
    for(int B = L*L;B < M;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -1010,6 +1014,7 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
       }
 
    }
+}
 
    this->symmetrize();
 

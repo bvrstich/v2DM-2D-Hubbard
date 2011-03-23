@@ -512,7 +512,10 @@ void PPHM::T(const TPM &tpm){
    double norm_ab,norm_de;
    int sign_ab,sign_de;
 
+#pragma omp parallel
+{
    //first the S = 1/2 blocks, these should be the most difficult ones.
+#pragma omp for private(a,b,c,d,e,z,S_ab,S_de,K_x,K_y,norm_ab,norm_de,sign_ab,sign_de) nowait
    for(int B = 0;B < L*L;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -670,6 +673,7 @@ void PPHM::T(const TPM &tpm){
    }
 
    //the easier S = 3/2 part:
+#pragma omp for private(a,b,c,d,e,z,S_ab,S_de,K_x,K_y,norm_ab,norm_de,sign_ab,sign_de) nowait
    for(int B = L*L;B < M;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -773,6 +777,7 @@ void PPHM::T(const TPM &tpm){
       }
 
    }
+}
 
    this->symmetrize();
 

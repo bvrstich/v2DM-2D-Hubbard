@@ -337,6 +337,7 @@ void PHM::G(const TPM &tpm){
 
    int S;
 
+#pragma omp parallel for private(a,b,c,d,S)
    for(int B = 0;B < gnr();++B){
 
       S = block_char[B][0];
@@ -413,6 +414,7 @@ void PHM::bar(const PPHM &pphm){
 
    int K_x,K_y;
 
+#pragma omp parallel for private(a,b,c,d,ward,hard,S,K_x,K_y)
    for(int B = 0;B < gnr();++B){//loop over the blocks PHM
 
       S = block_char[B][0];

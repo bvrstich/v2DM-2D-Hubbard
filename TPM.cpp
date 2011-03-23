@@ -562,6 +562,7 @@ void TPM::Q(int option,double A,double B,double C,const TPM &tpm_d){
 
    int a,b;
 
+#pragma omp parallel for private(a,b)
    for(int B = 0;B < gnr();++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -762,6 +763,7 @@ void TPM::S(int option,const TPM &tpm_d){
  */
 void TPM::min_unit(double scale){
 
+#pragma omp parallel for
    for(int B = 0;B < gnr();++B)
       for(int i = 0;i < gdim(B);++i)
          (*this)(B,i,i) -= scale;
@@ -824,6 +826,7 @@ double TPM::spin() const{
 
    int S;
 
+#pragma omp parallel for private(S) reduction(+:ward)
    for(int B = 0;B < gnr();++B){
 
       S = block_char[B][0];
@@ -906,6 +909,7 @@ void TPM::G(const PHM &phm){
 
    int sign;
 
+#pragma omp parallel for private(a,b,c,d,a_,b_,c_,d_,S,K_x,K_y,sign)
    for(int B = 0;B < gnr();++B){
 
       S = block_char[B][0];
@@ -991,7 +995,10 @@ void TPM::bar(const DPM &dpm){
 
    double ward;
 
+#pragma omp parallel
+{
    //first the S = 0 part, easiest:
+#pragma omp for private(a,b,c,d,K_x,K_y,ward) nowait
    for(int B = 0;B < L*L;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -1022,6 +1029,7 @@ void TPM::bar(const DPM &dpm){
    }
 
    //then the S = 1 part:
+#pragma omp for private(a,b,c,d,K_x,K_y,ward) nowait
    for(int B = M/2;B < M;++B){
 
       for(int i = 0;i < gdim(B);++i){
@@ -1059,6 +1067,7 @@ void TPM::bar(const DPM &dpm){
       }
 
    }
+}
 
    this->symmetrize();
 
@@ -1108,6 +1117,7 @@ void TPM::T(const PPHM &pphm){
    int S;
    int K_x,K_y;
 
+#pragma omp parallel for private(a,b,c,d,a_,b_,c_,d_,sign,norm,S,K_x,K_y)
    for(int B = 0;B < gnr();++B){//loop over the blocks
 
       S = block_char[B][0];
@@ -1196,6 +1206,7 @@ void TPM::bar(const PPHM &pphm){
 
    double ward;
 
+#pragma omp parallel for private(a,b,c,d,Z,K_x,K_y,ward)
    for(int B = 0;B < gnr();++B){//loop over the tp blocks
 
       Z = block_char[B][0];//spin of the TPM - block

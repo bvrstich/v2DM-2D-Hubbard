@@ -111,6 +111,7 @@ ostream &operator<<(ostream &output,const SPM &spm_p){
  */
 void SPM::bar(double scale,const TPM &tpm){
 
+#pragma omp parallel for
    for(int a = 0;a < L*L;++a){
 
       (*this)[a] = 0.0;
@@ -148,6 +149,7 @@ void SPM::bar(double scale,const PHM &phm){
 
    int K_x,K_y;
 
+#pragma omp parallel for private(K_x,K_y)
    for(int a = 0;a < L*L;++a){
 
       (*this)[a] = 0.0;
@@ -176,6 +178,7 @@ void SPM::bar(double scale,const PPHM &pphm){
 
    int K_x,K_y;
 
+#pragma omp parallel for private(K_x,K_y)
    for(int c = 0;c < L*L;++c){
 
       (*this)[c] = 0.0;
