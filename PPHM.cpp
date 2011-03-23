@@ -798,3 +798,5 @@ void PPHM::out_sp(const char *filename) const{
    }
 
 }
+
+/* vim: set ts=3 sw=3 expandtab :*/

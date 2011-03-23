@@ -115,3 +115,5 @@ int Hamiltonian::bar(int a){
    return xy_a[(-a_xy[a][0] + L)%L][(-a_xy[a][1] + L)%L];
 
 }
+
+/* vim: set ts=3 sw=3 expandtab :*/

@@ -250,3 +250,5 @@ int main(int argc,char **argv)
 }
 
 /* vim: set ts=3 sw=3 expandtab :*/
+
+/* vim: set ts=3 sw=3 expandtab :*/

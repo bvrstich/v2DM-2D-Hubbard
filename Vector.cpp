@@ -330,3 +330,5 @@ double Vector::centerpot(double alpha) const{
    return ward;
 
 }
+
+/* vim: set ts=3 sw=3 expandtab :*/
