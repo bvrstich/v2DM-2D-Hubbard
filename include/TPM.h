@@ -19,8 +19,9 @@ class PPHM;
 /**
  * @author Brecht Verstichel
  * @date 10-05-2010\n\n
- * This class TPM is a class written for two particle matrices with spinsymmetry and translational symemtry included, it inherits alle the function from its mother 
- * BlockMatrix, some special member functions and two lists that give the relationship between the sp and the tp basis.
+ * This class TPM is a class written for two particle matrices with spinsymmetry and translational symemtry included,
+ * it inherits alle the function from its mother BlockMatrix, 
+ * some special member functions and two lists that give the relationship between the sp and the tp basis.
  */
 class TPM : public BlockMatrix {
 
@@ -58,15 +59,6 @@ class TPM : public BlockMatrix {
       //easy to access the numbers, in sp mode and with tp spin and momentum quantumnumbers
       double operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const;
 
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      //geef L terug
-      int gL() const;
-
       void hubbard(double U);
 
       //Q afbeelding en zijn inverse
@@ -82,12 +74,6 @@ class TPM : public BlockMatrix {
 
       void proj_Tr();
 
-      //de hessiaan afbeelding:
-      void H(const TPM &b,const SUP &D);
-
-      //los het stelsel op
-      int solve(TPM &b,const SUP &D);
-
       void min_unit(double scale);
 
       void collaps(int option,const SUP &);
@@ -101,8 +87,6 @@ class TPM : public BlockMatrix {
       //input from file
       void in(ifstream &);
 
-      double trace_pair() const;
-
       void set_S_2();
 
       void G(const PHM &);
@@ -115,7 +99,7 @@ class TPM : public BlockMatrix {
 
       void T(const PPHM &);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -134,18 +118,6 @@ class TPM : public BlockMatrix {
 
       //!static list that returns the blockindex when given the S, K_x and K_y.
       static int ***char_block;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!dimension of the lattice
-      static int L;
 
       //!variables needed for the inverse overlapmatrix
       static double Sa,Sc;

@@ -31,60 +31,16 @@ int main(int argc,char **argv)
    // these are the default values
    int L = 3;//dim sp hilbert space
    int N = 9;//nr of particles
+
    double U = 1;//onsite interaction strength
 
-   struct option long_options[] =
-   {
-      {"particles",  required_argument, 0, 'n'},
-      {"dimension",  required_argument, 0, 'l'},
-      {"interaction", required_argument, 0, 'U'},
-      {"help",  no_argument, 0, 'h'},
-      {0, 0, 0, 0}
-   };
+   Tools::init(L,N);
 
-   int i,j;
-   while( (j = getopt_long (argc, argv, "hn:l:U:", long_options, &i)) != -1)
-      switch(j)
-      {
-         case 'h':
-         case '?':
-            cout << "Usage: " << argv[0] << " [OPTIONS]\n"
-               "\n"
-               "    -n, --particles=particles    Set the number of particles\n"
-               "    -l, --dimension=dimension            Set the dimension\n"
-               "    -U, --interaction=U          Set the interaction strength\n"
-               "    -h, --help                   Display this help\n"
-               "\n";
-            return 0;
-            break;
-         case 'n':
-            N = atoi(optarg);
-            if( N <= 0)
-            {
-               std::cerr << "Invalid particle number!" << endl;
-               return -1;
-            }
-            break;
-         case 'l':
-            L = atoi(optarg);
-            if( L <= 0)
-            {
-               std::cerr << "Invalid lattice dimension!" << endl;
-               return -2;
-            }
-            break;
-         case 'U':
-            U = atof(optarg);
-            break;
-      }
-
-   cout << "Starting with L=" << L << " N=" << N << " U=" << U << endl;
-
-   Hamiltonian::init(L);
-   TPM::init(L,N);
+   Hamiltonian::init();
+   TPM::init();
 
 #ifdef __G_CON
-   PHM::init(L,N);
+   PHM::init();
 #endif
 
 #ifdef __T1_CON
@@ -244,6 +200,7 @@ int main(int argc,char **argv)
 
    TPM::clear();
    Hamiltonian::clear();
+   Tools::clear();
 
    return 0;
 

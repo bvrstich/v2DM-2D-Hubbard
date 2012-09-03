@@ -28,6 +28,7 @@
 #endif
 
 #include "lapack.h"
+#include "Tools.h"
 #include "Matrix.h"
 #include "BlockMatrix.h"
 #include "Vector.h"

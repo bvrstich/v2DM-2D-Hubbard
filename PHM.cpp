@@ -12,53 +12,41 @@ using std::endl;
 vector< vector<int> > *PHM::ph2s;
 int ***PHM::s2ph;
 
-double **PHM::_6j;
-
 int **PHM::block_char;
 int ***PHM::char_block;
 
-int PHM::M;
-int PHM::N;
-int PHM::L;
-
 /**
  * initializes the statics
- * @param L_in input dimension of the lattice
- * @param N_in input nr of particles
  */
-void PHM::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-   M = L*L*2;
+void PHM::init(){
 
    //allocate stuff
-   ph2s = new vector< vector<int> > [M];
+   ph2s = new vector< vector<int> > [2*Tools::gM()];
 
-   s2ph = new int ** [M];
+   s2ph = new int ** [2*Tools::gM()];
 
-   for(int B = 0;B < M;++B){
+   for(int B = 0;B < 2*Tools::gM();++B){
 
-      s2ph[B] = new int * [L*L];
+      s2ph[B] = new int * [Tools::gM()];
 
-      for(int a = 0;a < L*L;++a)
-         s2ph[B][a] = new int [L*L];
+      for(int a = 0;a < Tools::gM();++a)
+         s2ph[B][a] = new int [Tools::gM()];
 
    }
 
-   block_char = new int * [M];
+   block_char = new int * [2*Tools::gM()];
 
-   for(int B = 0;B < M;++B)
+   for(int B = 0;B < 2*Tools::gM();++B)
       block_char[B] = new int [3];
 
    char_block = new int ** [2];
 
    for(int S = 0;S < 2;++S){
 
-      char_block[S] = new int * [L];
+      char_block[S] = new int * [Tools::gL()];
 
-      for(int x = 0;x < L;++x)
-         char_block[S][x] = new int [L];
+      for(int x = 0;x < Tools::gL();++x)
+         char_block[S][x] = new int [Tools::gL()];
 
    }
 
@@ -70,8 +58,8 @@ void PHM::init(int L_in,int N_in){
    int ph;
 
    //loop over the K_x K_y blocks
-   for(int K_x = 0;K_x < L;++K_x)
-      for(int K_y = 0;K_y < L;++K_y){
+   for(int K_x = 0;K_x < Tools::gL();++K_x)
+      for(int K_y = 0;K_y < Tools::gL();++K_y){
 
          ph = 0;
 
@@ -83,25 +71,27 @@ void PHM::init(int L_in,int N_in){
          char_block[0][K_x][K_y] = block;
 
          //S = 1
-         block_char[L*L + block][0] = 1;
-         block_char[L*L + block][1] = K_x;
-         block_char[L*L + block][2] = K_y;
+         block_char[Tools::gM() + block][0] = 1;
+         block_char[Tools::gM() + block][1] = K_x;
+         block_char[Tools::gM() + block][2] = K_y;
 
-         char_block[1][K_x][K_y] = L*L + block;
+         char_block[1][K_x][K_y] = Tools::gM() + block;
 
-         for(int a = 0;a < L*L;++a)
-            for(int b = 0;b < L*L;++b){
+         for(int a = 0;a < Tools::gM();++a)
+            for(int b = 0;b < Tools::gM();++b){
 
-               if( ( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0)) % L == K_x ) && ( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1)) % L == K_y ) ){
+               if( ( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0)) % Tools::gL() == K_x )
+                  
+                     && ( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1)) % Tools::gL() == K_y ) ){
 
                   v[0] = a;
                   v[1] = b;
 
                   ph2s[block].push_back(v);//S = 0
-                  ph2s[L*L + block].push_back(v);//S = 1
+                  ph2s[Tools::gM() + block].push_back(v);//S = 1
 
                   s2ph[block][a][b] = ph;
-                  s2ph[L*L + block][a][b] = ph;
+                  s2ph[Tools::gM() + block][a][b] = ph;
 
                   ++ph;
 
@@ -113,18 +103,6 @@ void PHM::init(int L_in,int N_in){
 
       }
 
-   //allocate 6j
-   _6j = new double * [2];
-
-   for(int S = 0;S < 2;++S)
-      _6j[S] = new double [2]; 
-
-   //initialize
-   _6j[0][0] = -0.5;
-   _6j[0][1] = 0.5;
-   _6j[1][0] = 0.5;
-   _6j[1][1] = 1.0/6.0;
-
 }
 
 /**
@@ -134,9 +112,9 @@ void PHM::clear(){
 
    delete [] ph2s;
 
-   for(int B = 0;B < M;++B){
+   for(int B = 0;B < 2*Tools::gM();++B){
 
-      for(int a = 0;a < L*L;++a)
+      for(int a = 0;a < Tools::gM();++a)
          delete [] s2ph[B][a];
 
       delete [] s2ph[B];
@@ -149,14 +127,9 @@ void PHM::clear(){
 
    delete [] block_char;
 
-   for(int S = 0;S < 2;++S)
-      delete [] _6j[S];
-
-   delete [] _6j;
-
    for(int S = 0;S < 2;++S){
 
-      for(int x = 0;x < L;++x)
+      for(int x = 0;x < Tools::gL();++x)
          delete [] char_block[S][x];
 
       delete [] char_block[S];
@@ -171,13 +144,13 @@ void PHM::clear(){
  * standard constructor: constructs BlockMatrix object with 2 blocks, for S = 0 and 1.
  * if counter == 0, allocates and constructs the lists containing the relationship between sp and ph basis.
  */
-PHM::PHM() : BlockMatrix(M) {
+PHM::PHM() : BlockMatrix(2*Tools::gM()) {
 
    //set the dimension of the blocks
-   for(int B = 0;B < L*L;++B)//S = 0
+   for(int B = 0;B < Tools::gM();++B)//S = 0
       setMatrixDim(B,ph2s[B].size(),1);
 
-   for(int B = L*L;B < 2*L*L;++B)//S = 1
+   for(int B = Tools::gM();B < 2*Tools::gM();++B)//S = 1
       setMatrixDim(B,ph2s[B].size(),3); 
 
 }
@@ -187,16 +160,12 @@ PHM::PHM() : BlockMatrix(M) {
  * if counter == 0, allocates and constructs the lists containing the relationship between sp and ph basis.
  * @param phm_c PHM to be copied into (*this)
  */
-PHM::PHM(const PHM &phm_c) : BlockMatrix(phm_c){
-
-}
+PHM::PHM(const PHM &phm_c) : BlockMatrix(phm_c){ }
 
 /**
  * destructor: if counter == 1 the memory for the static lists ph2s en s2ph will be deleted.
  */
-PHM::~PHM(){
-
-}
+PHM::~PHM(){ }
 
 ostream &operator<<(ostream &output,const PHM &phm_p){
 
@@ -243,16 +212,16 @@ double PHM::operator()(int B,int a,int b,int c,int d) const{
    int K_y = block_char[B][2];
 
    //check if momentum is conserved
-   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%L != K_x)
+   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%Tools::gL() != K_x)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%L != K_y)
+   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%Tools::gL() != K_y)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%L != K_x)
+   if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%Tools::gL() != K_x)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%L != K_y)
+   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%Tools::gL() != K_y)
       return 0;
 
    int i = s2ph[B][a][b];
@@ -276,16 +245,16 @@ double PHM::operator()(int B,int a,int b,int c,int d) const{
 double PHM::operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const{
 
    //check if momentum is conserved
-   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%L != K_x)
+   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%Tools::gL() != K_x)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%L != K_y)
+   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%Tools::gL() != K_y)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%L != K_x)
+   if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%Tools::gL() != K_x)
       return 0;
 
-   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%L != K_y)
+   if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%Tools::gL() != K_y)
       return 0;
 
    int B = char_block[S][K_x][K_y];
@@ -298,40 +267,13 @@ double PHM::operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const{
 }
 
 /**
- * @return number of particles
- */
-int PHM::gN() const{
-
-   return N;
-
-}
-
-/**
- * @return number of single particle oribals
- */
-int PHM::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return dimension of the lattice
- */
-int PHM::gL() const{
-
-   return L;
-
-}
-
-/**
  * The G map, maps a TPM object on a PHM object.
  * @param tpm input TPM
  */
 void PHM::G(const TPM &tpm){
 
    //construct the SPM corresponding to the TPM
-   SPM spm(1.0/(N - 1.0),tpm);
+   SPM spm(1.0/(Tools::gN() - 1.0),tpm);
 
    int a,b,c,d;
 
@@ -356,10 +298,13 @@ void PHM::G(const TPM &tpm){
             //transform k_d to tpm sp-momentum:
             d = Hamiltonian::bar(ph2s[B][j][1]);
 
-            (*this)(B,i,j) = - _6j[0][S] * tpm(0,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(d,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(d,1))%L,a,d,c,b)
+            (*this)(B,i,j) = - Tools::g6j(0,0,0,S) * tpm(0,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(d,0))%Tools::gL(),
             
+                  (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(d,1))%Tools::gL(),a,d,c,b)
                
-               - 3.0 * _6j[1][S] * tpm(1,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(d,0))%L,(Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(d,1))%L,a,d,c,b);
+               - 3.0 * Tools::g6j(0,0,1,S) * tpm(1,(Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(d,0))%Tools::gL(),
+               
+                     (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(d,1))%Tools::gL(),a,d,c,b);
 
             if(a == d)
                (*this)(B,i,j) *= std::sqrt(2.0);
@@ -436,12 +381,12 @@ void PHM::bar(const PPHM &pphm){
             for(int S_ab = 0;S_ab < 2;++S_ab)
                for(int S_de = 0;S_de < 2;++S_de){
 
-                  ward = 2.0 * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) ) * _6j[S][S_ab] * _6j[S][S_de];
+                  ward = 2.0 * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) ) * Tools::g6j(0,0,S,S_ab) * Tools::g6j(0,0,S,S_de);
 
-                  for(int e = 0;e < L*L;++e){
+                  for(int e = 0;e < Tools::gL();++e){
 
-                     K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
-                     K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+                     K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%Tools::gL();
+                     K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%Tools::gL();
 
                      hard = ward * pphm(0,K_x,K_y,S_ab,e,a,b,S_de,e,c,d);
 
@@ -460,10 +405,10 @@ void PHM::bar(const PPHM &pphm){
 
             //then the S = 3/2 block
             if(S == 1)
-               for(int e = 0;e < L*L;++e){
+               for(int e = 0;e < Tools::gM();++e){
 
-                  K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%L;
-                  K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%L;
+                  K_x = (Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0))%Tools::gL();
+                  K_y = (Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1))%Tools::gL();
 
                   (*this)(B,i,j) += 4.0/3.0 * pphm(1,K_x,K_y,1,e,a,b,1,e,c,d);
 

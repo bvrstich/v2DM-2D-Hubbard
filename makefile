@@ -19,7 +19,8 @@ CPPSRC	= 2D_hub.cpp\
             PPHM.cpp\
             SUP.cpp\
             EIG.cpp\
-            Hamiltonian.cpp
+            Hamiltonian.cpp\
+            Tools.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 
@@ -31,7 +32,7 @@ BRIGHT_ROOT= .
 
 INCLUDE = ./include
 
-LIBS= -llapack -lblas
+LIBS= -llapack -lblas -lgsl
 
 CC	= gcc
 CXX	= g++
@@ -39,8 +40,8 @@ CXX	= g++
 # -----------------------------------------------------------------------------
 #   Compiler & Linker flags
 # -----------------------------------------------------------------------------
-CFLAGS	= -I$(INCLUDE) -g -Wall -O2 -fopenmp
-LDFLAGS	= -g -Wall -O2 -fopenmp
+CFLAGS	= -I$(INCLUDE) -g -Wall 
+LDFLAGS	= -g -Wall
 
 
 # =============================================================================

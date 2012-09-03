@@ -13,34 +13,27 @@ using std::ios;
 int **Hamiltonian::xy_a;
 int **Hamiltonian::a_xy;
 
-int Hamiltonian::L;
-int Hamiltonian::M;
-
 /**
  * function that allocates and constructs the lists.
- * @param L_in the dimension of the square lattice.
  */
-void Hamiltonian::init(int L_in){
-
-   L = L_in;
-   M = L*L;
+void Hamiltonian::init(){
 
    //allocate
-   xy_a = new int * [L];
+   xy_a = new int * [Tools::gL()];
 
-   for(int x = 0;x < L;++x)
-      xy_a[x] = new int [L];
+   for(int x = 0;x < Tools::gL();++x)
+      xy_a[x] = new int [Tools::gL()];
 
-   a_xy = new int * [M];
+   a_xy = new int * [Tools::gM()];
 
-   for(int i = 0;i < M;++i)
+   for(int i = 0;i < Tools::gM();++i)
       a_xy[i] = new int [2];
 
    //construct:
    int a = 0;
 
-   for(int x = 0;x < L;++x)
-      for(int y = 0;y < L;++y){
+   for(int x = 0;x < Tools::gL();++x)
+      for(int y = 0;y < Tools::gL();++y){
 
          a_xy[a][0] = x;
          a_xy[a][1] = y;
@@ -59,13 +52,13 @@ void Hamiltonian::init(int L_in){
 void Hamiltonian::clear(){
 
    //delete xy_a
-   for(int x = 0;x < L;++x)
+   for(int x = 0;x < Tools::gL();++x)
       delete [] xy_a[x];
 
    delete [] xy_a;
 
    //delete a_xy
-   for(int i = 0;i < M;++i)
+   for(int i = 0;i < Tools::gM();++i)
       delete [] a_xy[i];
 
    delete [] a_xy;
@@ -77,7 +70,7 @@ void Hamiltonian::clear(){
  */
 void Hamiltonian::print(){
 
-   for(int i = 0;i < M;++i)
+   for(int i = 0;i < Tools::gM();++i)
       std::cout << i << "\t" << a_xy[i][0]<< "\t" << a_xy[i][1] << std::endl;
 
 }
@@ -112,7 +105,7 @@ int Hamiltonian::gxy_a(int k_x,int k_y){
  */
 int Hamiltonian::bar(int a){
 
-   return xy_a[(-a_xy[a][0] + L)%L][(-a_xy[a][1] + L)%L];
+   return xy_a[(-a_xy[a][0] + Tools::gL())%Tools::gL()][(-a_xy[a][1] + Tools::gL())%Tools::gL()];
 
 }
 

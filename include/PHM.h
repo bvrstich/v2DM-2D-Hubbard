@@ -12,7 +12,8 @@ using std::ostream;
 /**
  * @author Brecht Verstichel
  * @date 11-05-2010\n\n
- * This class, PHM, is a class written for spinsymmetrical, translationally invariant particle-hole matrices, it inherits all the functions from its mother class
+ * This class, PHM, is a class written for spinsymmetrical, translationally invariant particle-hole matrices
+ * it inherits all the functions from its mother class
  * BlockMatrix, some special member functions and two lists that give the relationship between the sp and the ph basis.
  */
 class PHM : public BlockMatrix {
@@ -61,7 +62,7 @@ class PHM : public BlockMatrix {
 
       void bar(const PPHM &pphm);
 
-      static void init(int,int);
+      static void init();
 
       static void clear();
 
@@ -73,23 +74,11 @@ class PHM : public BlockMatrix {
       //!static list that takes in a blockindex B and two sp indices a,b and returns a ph index i: i = s2ph[B][a][b]
       static int ***s2ph;
 
-      //!list of 6j symbols needed.
-      static double **_6j;
-
       //!static list that takes a blockindex B and returns the ph spin S and the ph momenta K_x and K_y.
       static int **block_char;
 
       //!static list that returns the blockindex when given the S, K_x and K_y.
       static int ***char_block;
-
-      //!number of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!dimension of the lattice
-      static int L;
 
 };
 

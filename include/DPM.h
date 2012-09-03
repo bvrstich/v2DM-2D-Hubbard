@@ -12,8 +12,10 @@ using std::ostream;
  * @author Brecht Verstichel
  * @date 04-03-2011\n\n
  * This class, DPM, is a class written for spinsymmetrical, translationally invariant three-particle matrices on a square lattice of side L
- * It is written specially for the T_1 condition.  * It inherits all the functions from its mother class BlockMatrix, some special member functions and two lists that
- * give the relationship between the dp (three-particle) and the sp basis. This matrix falls apart in 2*L*L blocks: S = 1/2 with degeneracy 2 and S = 3/2 with degeneracy 4,
+ * It is written specially for the T_1 condition.  
+ * It inherits all the functions from its mother class BlockMatrix, some special member functions and two lists that
+ * give the relationship between the dp (three-particle) and the sp basis. 
+ * This matrix falls apart in 2*L*L blocks: S = 1/2 with degeneracy 2 and S = 3/2 with degeneracy 4,
  * both have a blockstructure of (k_a + k_b + k_b) % M == K. The basis is determined by the dp x and y -momentum K_xK_y, the sp qn's a,b,c,
  * an intermediate spincoupling quantumnumber S_ab = 0 or 1, and the total spin S.
  */
