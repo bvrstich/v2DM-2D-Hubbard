@@ -10,6 +10,7 @@ using std::ostream;
 #include "TPM.h"
 
 class PHM;
+class PPHM;
 
 /**
  * @author Brecht Verstichel
@@ -47,6 +48,8 @@ class SPM : public Vector {
       void bar(double,const TPM &);
 
       void bar(double,const PHM &);
+
+      void bar(double,const PPHM &);
 
    private:
 

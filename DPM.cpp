@@ -346,10 +346,8 @@ int DPM::gK_y(int block) const{
 
 /**
  * access the elements of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
- * DPM(S,K,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z) = sum_S_ac (some terms dependent on spin) DPM(S,K,S_ac,k_a,k_c,k_b,S_de,k_d,k_e,k_z) etc...
+ * DPM(S,S_ab,k_a,k_b,k_c,S_de,k_d,k_e,k_z) = sum_S_ac (some terms dependent on spin) DPM(S,K,S_ac,k_a,k_c,k_b,S_de,k_d,k_e,k_z) etc...
  * @param S dp-spin block quantumnumber: S = 0 means S == 1/2 and S = 1 means S == 3/2 (for simplicity)
- * @param K_x dp x-momentum block quantumnumber: K_x = 0 -> Tools::gL()-1 
- * @param K_y dp y-momentum block quantumnumber: K_y = 0 -> Tools::gL()-1 
  * @param S_ab The intermediate spinquantumnumber of a and b.
  * @param a first sp index that forms the dp row index i together with b, c and S_ab, with dp spin and momentum SK
  * @param b second sp index that forms the dp row index i together with a, c and S_ab, with dp spin and momentum SK
@@ -362,19 +360,15 @@ int DPM::gK_y(int block) const{
  */
 double DPM::operator()(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,int z) const {
 
-   //check if the momentum is correct:
-   if( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%Tools::gL() !=
-      
-         (Hamiltonian::ga_xy(d,0) + Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(z,0))%Tools::gL() )
-      return 0.0;
-
-   if( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%Tools::gL() != 
-      
-         (Hamiltonian::ga_xy(d,1) + Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(z,1))%Tools::gL() )
-      return 0.0;
-
    int K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%Tools::gL();
    int K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%Tools::gL();
+
+   //check if the momentum is correct:
+   if( K_x != (Hamiltonian::ga_xy(d,0) + Hamiltonian::ga_xy(e,0) + Hamiltonian::ga_xy(z,0))%Tools::gL() )
+      return 0.0;
+
+   if( K_y != (Hamiltonian::ga_xy(d,1) + Hamiltonian::ga_xy(e,1) + Hamiltonian::ga_xy(z,1))%Tools::gL() )
+      return 0.0;
 
    //blockindex:
    int B = char_block[S][K_x][K_y];
