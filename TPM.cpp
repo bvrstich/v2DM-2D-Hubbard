@@ -77,7 +77,7 @@ void TPM::init(){
             for(int b = a;b < Tools::gL()*Tools::gL();++b){
 
                if( ( (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0)) % Tools::gL() == K_x ) 
-                  
+
                      && ( (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1)) % Tools::gL() == K_y ) ){
 
                   v[0] = a;
@@ -204,7 +204,7 @@ ostream &operator<<(ostream &output,const TPM &tpm_p){
       K_y = tpm_p.block_char[B][2];
 
       output << "S =\t" << S << "\tK_x =\t" << K_x << "\tK_y =\t" << K_y <<
-      
+
          "\tdimension =\t" << tpm_p.gdim(B) << "\tdegeneracy =\t" << tpm_p.gdeg(B) << std::endl;
 
       output << std::endl;
@@ -818,7 +818,7 @@ void TPM::G(const PHM &phm){
             //four ph terms:
             for(int Z = 0;Z < 2;++Z)
                (*this)(B,i,j) -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * ( phm(Z,a,d_,c,b_) + phm(Z,b,c_ ,d, a_) 
-               
+
                      + sign * ( phm(Z,b,d_ ,c, a_ ) + phm(Z,a,c_,d,b_) ) );
 
             //norm:
@@ -832,6 +832,95 @@ void TPM::G(const PHM &phm){
 
          (*this)(B,i,i) += spm[a] + spm[b];
 
+      }
+
+   }
+
+   this->symmetrize();
+
+}
+
+/** 
+ * The T1-down map that maps a DPM on TPM. This is just a Q-like map using the TPM::bar (dpm) as input.
+ * @param dpm the input DPM matrix
+ */
+void TPM::T(const DPM &dpm){
+
+   TPM tpm;
+   tpm.bar(dpm);
+
+   double a = 1;
+   double b = 1.0/(3.0*Tools::gN()*(Tools::gN() - 1.0));
+   double c = 0.5/(Tools::gN() - 1.0);
+
+   this->Q(1,a,b,c,tpm);
+
+}
+
+/**
+ * Construct a spincoupled, translationally invariant TPM matrix out of a spincoupled, translationally invariant DPM matrix.
+ * For the definition and derivation see symmetry.pdf
+ * @param dpm input DPM
+ */
+void TPM::bar(const DPM &dpm){
+
+   int a,b,c,d;
+
+   double ward;
+
+   //first the S = 0 part, easiest:
+   for(int B = 0;B < Tools::gL()*Tools::gL();++B){
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
+
+         for(int j = i;j < gdim(B);++j){
+
+            c = t2s[B][j][0];
+            d = t2s[B][j][1];
+
+            (*this)(B,i,j) = 0.0;
+
+            //only total S = 1/2 can remain because cannot couple to S = 3/2 with intermediate S = 0
+            for(int e = 0;e < Tools::gL()*Tools::gL();++e)
+               (*this)(B,i,j) += 2.0 * dpm(0,0,a,b,e,0,c,d,e);
+
+         }
+      }
+
+   }
+
+   //then the S = 1 part:
+   for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
+
+         for(int j = i;j < gdim(B);++j){
+
+            c = t2s[B][j][0];
+            d = t2s[B][j][1];
+
+            (*this)(B,i,j) = 0.0;
+
+            for(int Z = 0;Z < 2;++Z){//loop over the dpm blocks: S = 1/2 and 3/2 = Z + 1/2
+
+               ward = 0.0;
+
+               for(int e = 0;e < Tools::gL()*Tools::gL();++e)
+                  ward += dpm(Z,1,a,b,e,1,c,d,e);
+
+               ward *= (2 * (Z + 0.5) + 1.0)/3.0;
+
+               (*this)(B,i,j) += ward;
+
+            }
+
+         }
       }
 
    }

@@ -13,6 +13,7 @@ using std::vector;
 
 class SUP;
 class PHM;
+class DPM;
 
 /**
  * @author Brecht Verstichel
@@ -87,6 +88,10 @@ class TPM : public BlockMatrix {
       double line_search(double,SUP &,const TPM &);
 
       void G(const PHM &);
+
+      void bar(const DPM &);
+
+      void T(const DPM &);
 
       static void init();
 
