@@ -7,62 +7,29 @@ using std::endl;
 
 #include "include.h"
 
-int EIG::M;
-int EIG::N;
-int EIG::L;
-int EIG::dim;
-
-/**
- * intialize the statics
- * @param L_in dimension of the lattice
- * @param N_in the nr of particles
- */
-void EIG::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = L*L*2;
-
-   dim = M*(M - 1);
-
-#ifdef __G_CON
-   dim += M*M;
-#endif
-
-#ifdef __T1_CON
-   dim += M*(M-1)*(M-2)/6;
-#endif
-
-#ifdef __T2_CON
-   dim += M*M*(M - 1)/2;
-#endif
-
-}
-
-
 /**
  * standard constructor with initialization on the eigenvalues of a SUP object.
- * @param SZ input SUP object that will be destroyed after this function is called. The eigenvectors
+ * @param sup input SUP object that will be destroyed after this function is called. The eigenvectors
  * of the matrix will be stored in the columns of the original SUP matrix.
  */
-EIG::EIG(SUP &SZ){
+EIG::EIG(SUP &sup){
 
-   v_tp = new BlockVector<TPM> * [2];
+   vI = new BlockVector<TPM>(sup.gI());
 
-   for(int i = 0;i < 2;++i)
-      v_tp[i] = new BlockVector<TPM>(SZ.tpm(i));
+#ifdef __Q_CON
+   vQ = new BlockVector<TPM>(sup.gQ());
+#endif
 
 #ifdef __G_CON
-   v_ph = new BlockVector<PHM>(SZ.phm());
+   vG = new BlockVector<PHM>(sup.gG());
 #endif
 
 #ifdef __T1_CON
-   v_dp = new BlockVector<DPM>(SZ.dpm());
+   vT1 = new BlockVector<DPM>(sup.gT1());
 #endif
 
 #ifdef __T2_CON
-   v_pph = new BlockVector<PPHM>(SZ.pphm());
+   vT2 = new BlockVector<PPHM>(sup.gT2());
 #endif
 
 }
@@ -74,21 +41,22 @@ EIG::EIG(SUP &SZ){
  */
 EIG::EIG(const EIG &eig_c){
 
-   v_tp = new BlockVector<TPM> * [2];
+   vI = new BlockVector<TPM>(eig_c.gvI());
 
-   for(int i = 0;i < 2;++i)
-      v_tp[i] = new BlockVector<TPM>(eig_c.tpv(i));
+#ifdef __Q_CON
+   vQ = new BlockVector<TPM>(eig_c.gvQ());
+#endif
 
 #ifdef __G_CON
-   v_ph = new BlockVector<PHM>(eig_c.phv());
+   vG = new BlockVector<PHM>(eig_c.gvG());
 #endif
 
 #ifdef __T1_CON
-   v_dp = new BlockVector<DPM>(eig_c.dpv());
+   vT1 = new BlockVector<DPM>(eig_c.gvT1());
 #endif
 
 #ifdef __T2_CON
-   v_pph = new BlockVector<PPHM>(eig_c.pphv());
+   vT2 = new BlockVector<PPHM>(eig_c.gvT2());
 #endif
 
 }
@@ -99,25 +67,22 @@ EIG::EIG(const EIG &eig_c){
  */
 EIG &EIG::operator=(const EIG &eig_c){
 
-   for(int i = 0;i < 2;++i)
-      *v_tp[i] = *eig_c.v_tp[i];
+   *vI = eig_c.gvI();
+
+#ifdef __Q_CON
+   *vQ = eig_c.gvQ();
+#endif
 
 #ifdef __G_CON
-
-   *v_ph = *eig_c.v_ph;
-
+   *vG = eig_c.gvG();
 #endif
 
 #ifdef __T1_CON
-
-   *v_dp = *eig_c.v_dp;
-
+   *vT1 = eig_c.gvT1();
 #endif
 
 #ifdef __T2_CON
-
-   *v_pph = *eig_c.v_pph;
-
+   *vT2 = eig_c.gvT2();
 #endif
 
    return *this;
@@ -129,136 +94,95 @@ EIG &EIG::operator=(const EIG &eig_c){
  */
 EIG::~EIG(){
 
-   for(int i = 0;i < 2;++i)
-      delete v_tp[i];
+   delete vI;
 
-   delete [] v_tp;
+#ifdef __Q_CON
+   delete vQ;
+#endif
 
 #ifdef __G_CON
-   
-   delete v_ph;
-
+   delete vG;
 #endif
 
 #ifdef __T1_CON
-   
-   delete v_dp;
-
+   delete vT1;
 #endif
 
 #ifdef __T2_CON
-   
-   delete v_pph;
-
-#endif
-
-}
-
-/**
- * Diagonalize a SUP matrix when the memory has allready been allocated before
- * @param sup matrix to be diagonalized
- */
-void EIG::diagonalize(SUP &sup){
-
-   for(int i = 0;i < 2;++i)
-      v_tp[i]->diagonalize(sup.tpm(i));
-
-#ifdef __G_CON
-   
-   v_ph->diagonalize(sup.phm());
-
-#endif
-
-#ifdef __T1_CON
-   
-   v_dp->diagonalize(sup.dpm());
-
-#endif
-
-#ifdef __T2_CON
-   
-   v_pph->diagonalize(sup.pphm());
-
+   delete vT2;
 #endif
 
 }
 
 ostream &operator<<(ostream &output,const EIG &eig_p){
 
-   for(int i = 0;i < 2;++i)
-      std::cout << eig_p.tpv(i) << std::endl;
+   std::cout << eig_p.gvI() << std::endl;
+
+#ifdef __Q_CON
+   std::cout << eig_p.gvQ() << std::endl;
+#endif
 
 #ifdef __G_CON
-   
-   std::cout << eig_p.phv() << std::endl;
-
+   std::cout << eig_p.gvG() << std::endl;
 #endif
 
 #ifdef __T1_CON
-   
-   std::cout << eig_p.dpv() << std::endl;
-
+   std::cout << eig_p.gvT1() << std::endl;
 #endif
 
 #ifdef __T2_CON
-   
-   std::cout << eig_p.pphv() << std::endl;
-
+   std::cout << eig_p.gvT2() << std::endl;
 #endif
 
    return output;
 
 }
 
-/**
- * @return nr of particles
+/** 
+ * get the BlockVector<TPM> object containing the eigenvalues of the TPM block I
+ * @return a BlockVector<TPM> object containing the desired eigenvalues
  */
-int EIG::gN() const{
+BlockVector<TPM> &EIG::gvI(){
 
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int EIG::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return dimension of the lattice
- */
-int EIG::gL() const{
-
-   return L;
+   return *vI;
 
 }
 
 /** 
- * get the BlockVector<TPM> object containing the eigenvalues of the TPM blocks P and Q
- * @param i == 0, the eigenvalues of the P block will be returned, i == 1, the eigenvalues of the Q block will be returned
+ * const version
+ * get the BlockVector<TPM> object containing the eigenvalues of the TPM block I
  * @return a BlockVector<TPM> object containing the desired eigenvalues
  */
-BlockVector<TPM> &EIG::tpv(int i){
+const BlockVector<TPM> &EIG::gvI() const{
 
-   return *v_tp[i];
+   return *vI;
+
+}
+
+#ifdef __Q_CON
+
+/** 
+ * get the BlockVector<TPM> object containing the eigenvalues of the TPM block Q
+ * @return a BlockVector<TPM> object containing the desired eigenvalues
+ */
+BlockVector<TPM> &EIG::gvQ(){
+
+   return *vQ;
 
 }
 
 /** 
- * const version\n\n
- * get the BlockVector<TPM> object containing the eigenvalues of the TPM blocks P and Q
- * @param i == 0, the eigenvalues of the P block will be returned, i == 1, the eigenvalues of the Q block will be returned
+ * const version
+ * get the BlockVector<TPM> object containing the eigenvalues of the TPM block Q
  * @return a BlockVector<TPM> object containing the desired eigenvalues
  */
-const BlockVector<TPM> &EIG::tpv(int i) const{
+const BlockVector<TPM> &EIG::gvQ() const{
 
-   return *v_tp[i];
+   return *vQ;
 
 }
+
+#endif
 
 #ifdef __G_CON
 
@@ -266,9 +190,9 @@ const BlockVector<TPM> &EIG::tpv(int i) const{
  * get the BlockVector<PHM> object containing the eigenvalues of the PHM block G
  * @return a BlockVector<PHM> object containing the desired eigenvalues
  */
-BlockVector<PHM> &EIG::phv(){
+BlockVector<PHM> &EIG::gvG(){
 
-   return *v_ph;
+   return *vG;
 
 }
 
@@ -276,9 +200,9 @@ BlockVector<PHM> &EIG::phv(){
  * get the BlockVector<PHM> object containing the eigenvalues of the PHM block G, const version
  * @return a BlockVector<PHM> object containing the desired eigenvalues
  */
-const BlockVector<PHM> &EIG::phv() const{
+const BlockVector<PHM> &EIG::gvG() const{
 
-   return *v_ph;
+   return *vG;
 
 }
 
@@ -290,9 +214,9 @@ const BlockVector<PHM> &EIG::phv() const{
  * get the BlockVector<DPM> object containing the eigenvalues of the DPM block T1 of the SUP matrix
  * @return a BlockVector<DPM> object containing the desired eigenvalues
  */
-BlockVector<DPM> &EIG::dpv(){
+BlockVector<DPM> &EIG::gvT1(){
 
-   return *v_dp;
+   return *vT1;
 
 }
 
@@ -300,9 +224,9 @@ BlockVector<DPM> &EIG::dpv(){
  * get the BlockVector<DPM> object containing the eigenvalues of the DPM block T1 of the SUP matrix, const version
  * @return a BlockVector<DPM> object containing the desired eigenvalues
  */
-const BlockVector<DPM> &EIG::dpv() const{
+const BlockVector<DPM> &EIG::gvT1() const{
 
-   return *v_dp;
+   return *vT1;
 
 }
 
@@ -314,9 +238,9 @@ const BlockVector<DPM> &EIG::dpv() const{
  * get the BlockVector<PPHM> object containing the eigenvalues of the PPHM block T2 of the SUP matrix
  * @return a BlockVector<PPHM> object containing the desired eigenvalues
  */
-BlockVector<PPHM> &EIG::pphv(){
+BlockVector<PPHM> &EIG::gvT2(){
 
-   return *v_pph;
+   return *vT2;
 
 }
 
@@ -324,23 +248,13 @@ BlockVector<PPHM> &EIG::pphv(){
  * get the BlockVector<PPHM> object containing the eigenvalues of the PPHM block T2 of the SUP matrix, const version
  * @return a BlockVector<PPHM> object containing the desired eigenvalues
  */
-const BlockVector<PPHM> &EIG::pphv() const{
+const BlockVector<PPHM> &EIG::gvT2() const{
 
-   return *v_pph;
+   return *vT2;
 
 }
 
 #endif
-
-/**
- * @return total dimension of the EIG object
- */
-int EIG::gdim() const{
-
-   return dim;
-
-}
-
 
 /**
  * @return the minimal element present in this EIG object.
@@ -349,34 +263,30 @@ int EIG::gdim() const{
 double EIG::min() const{
 
    //lowest eigenvalue of P block
-   double ward = v_tp[0]->min();
+   double ward = vI->min();
 
+#ifdef __Q_CON
    //lowest eigenvalue of Q block
-   if(ward > v_tp[1]->min())
-      ward = v_tp[1]->min();
+   if(ward > vQ->min())
+      ward = vQ->min();
+#endif
 
 #ifdef __G_CON
-
    //lowest eigenvalue of G block
-   if(ward > v_ph->min())
-      ward = v_ph->min();
-
+   if(ward > vG->min())
+      ward = vG->min();
 #endif
 
 #ifdef __T1_CON
-
    //lowest eigenvalue of the T1 block
-   if(ward > v_dp->min())
-      ward = v_dp->min();
-
+   if(ward > vT1->min())
+      ward = vT1->min();
 #endif
 
 #ifdef __T2_CON
-
    //lowest eigenvalue of the T2 block
-   if(ward > v_pph->min())
-      ward = v_pph->min();
-
+   if(ward > vT2->min())
+      ward = vT2->min();
 #endif
 
    return ward;
@@ -390,34 +300,30 @@ double EIG::min() const{
 double EIG::max() const{
 
    //highest eigenvalue of P block
-   double ward = v_tp[0]->max();
+   double ward = vI->max();
 
+#ifdef __Q_CON
    //highest eigenvalue of Q block
-   if(ward < v_tp[1]->max())
-      ward = v_tp[1]->max();
+   if(ward < vQ->max())
+      ward = vQ->max();
+#endif
 
 #ifdef __G_CON
-
    //highest eigenvalue of G block
-   if(ward < v_ph->max())
-      ward = v_ph->max();
-
+   if(ward < vG->max())
+      ward = vG->max();
 #endif
 
 #ifdef __T1_CON
-
    //highest eigenvalue of the T1 block
-   if(ward < v_dp->max())
-      ward = v_dp->max();
-
+   if(ward < vT1->max())
+      ward = vT1->max();
 #endif
 
 #ifdef __T2_CON
-
    //highest eigenvalue of the T2 block
-   if(ward < v_pph->max())
-      ward = v_pph->max();
-
+   if(ward < vT2->max())
+      ward = vT2->max();
 #endif
 
    return ward;
@@ -425,77 +331,28 @@ double EIG::max() const{
 }
 
 /**
- * @return The deviation of the central path as calculated with the logarithmic barrierfunction, the EIG object is calculated
- * in SUP::center_dev.
+ * @param alpha step length along the Newton direction
+ * @return The line search function, gradient of the potential in the Newton direction as a function of the step length alpha
  */
-double EIG::center_dev() const{
+double EIG::lsfunc(double alpha) const{
 
-   double sum = v_tp[0]->sum() + v_tp[1]->sum();
+   double ward = vI->lsfunc(alpha);
 
-   double log_product = v_tp[0]->log_product() + v_tp[1]->log_product();
+#ifdef __Q_CON
+   ward += vQ->lsfunc(alpha);
+#endif
 
 #ifdef __G_CON
-
-   sum += v_ph->sum();
-
-   log_product += v_ph->log_product();
-
+   ward += vG->lsfunc(alpha);
 #endif
 
 #ifdef __T1_CON
-
-   sum += v_dp->sum();
-
-   log_product += v_dp->log_product();
-
+   ward += vT1->lsfunc(alpha);
 #endif
 
 #ifdef __T2_CON
-
-   sum += v_pph->sum();
-
-   log_product += v_pph->log_product();
-
-#endif
-
-   return dim*log(sum/(double)dim) - log_product;
-
-}
-
-/**
- * @return the deviation of the central path measured trough the logarithmic potential barrier (see primal_dual.pdf), when you take a stepsize alpha from
- * the point (S,Z) in the primal dual newton direction (DS,DZ), for which you have calculated the generalized eigenvalues eigen_S and eigen_Z in SUP::line_search.
- * (*this) = eigen_S --> generalized eigenvalues for the DS step
- * @param alpha the stepsize
- * @param eigen_Z --> generalized eigenvalues for the DS step
- * @param c_S = Tr (DS Z)/Tr (SZ): parameter calculated in SUP::line_search
- * @param c_Z = Tr (S DZ)/Tr (SZ): parameter calculated in SUP::line_search
- */
-double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) const{
-
-   double ward = dim*log(1.0 + alpha*(c_S + c_Z));
-
-   for(int i = 0;i < 2;++i)
-      ward -= v_tp[i]->centerpot(alpha) + (eigen_Z.tpv(i)).centerpot(alpha);
-
-#ifdef __G_CON
-
-   ward -= v_ph->centerpot(alpha) + (eigen_Z.phv()).centerpot(alpha);
-
-#endif
-
-#ifdef __T1_CON
-
-   ward -= v_dp->centerpot(alpha) + (eigen_Z.dpv()).centerpot(alpha);
-
-#endif
-
-#ifdef __T2_CON
-
-   ward -= v_pph->centerpot(alpha) + (eigen_Z.pphv()).centerpot(alpha);
-
+   ward += vT2->lsfunc(alpha);
 #endif
 
    return ward;
-
 }

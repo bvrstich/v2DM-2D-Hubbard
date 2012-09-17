@@ -9,14 +9,22 @@ using std::ostream;
 #include "BlockVector.h"
 #include "SUP.h"
 
+#ifdef PQ
+
+#define __Q_CON
+
+#endif
+
 #ifdef PQG
 
+#define __Q_CON
 #define __G_CON
 
 #endif
 
 #ifdef PQGT1
 
+#define __Q_CON
 #define __G_CON
 #define __T1_CON
 
@@ -24,6 +32,7 @@ using std::ostream;
 
 #ifdef PQGT2
 
+#define __Q_CON
 #define __G_CON
 #define __T2_CON
 
@@ -31,6 +40,7 @@ using std::ostream;
 
 #ifdef PQGT
 
+#define __Q_CON
 #define __G_CON
 #define __T1_CON
 #define __T2_CON
@@ -60,103 +70,75 @@ class EIG{
 
    public:
 
-   //constructor met initialisatie op 
-   EIG(SUP &);
+      //constructor met initialisatie op 
+      EIG(SUP &);
 
-   //copy constructor
-   EIG(const EIG &);
+      //copy constructor
+      EIG(const EIG &);
 
-   //destructor
-   ~EIG();
+      //destructor
+      ~EIG();
 
-   void diagonalize(SUP &);
+      //overload equality operator
+      EIG &operator=(const EIG &);
 
-   int gN() const;
+      BlockVector<TPM> &gvI();
 
-   int gM() const;
+      const BlockVector<TPM> &gvI() const;
 
-   int gL() const;
+#ifdef __Q_CON
+      BlockVector<TPM> &gvQ();
 
-   int gdim() const;
-
-   double centerpot(double,const EIG &,double,double) const;
-
-   //overload equality operator
-   EIG &operator=(const EIG &);
-
-   BlockVector<TPM> &tpv(int);
-
-   const BlockVector<TPM> &tpv(int) const;
+      const BlockVector<TPM> &gvQ() const;
+#endif
 
 #ifdef __G_CON
+      BlockVector<PHM> &gvG();
 
-   BlockVector<PHM> &phv();
-
-   const BlockVector<PHM> &phv() const;
-
+      const BlockVector<PHM> &gvG() const;
 #endif
 
 #ifdef __T1_CON
+      BlockVector<DPM> &gvT1();
 
-   BlockVector<DPM> &dpv();
-
-   const BlockVector<DPM> &dpv() const;
-
+      const BlockVector<DPM> &gvT1() const;
 #endif
 
 #ifdef __T2_CON
+      BlockVector<PPHM> &gvT2();
 
-   BlockVector<PPHM> &pphv();
-
-   const BlockVector<PPHM> &pphv() const;
-
+      const BlockVector<PPHM> &gvT2() const;
 #endif
 
-   double min() const;
+      double min() const;
 
-   double max() const;
+      double max() const;
 
-   double center_dev() const;
-
-   static void init(int,int);
+      double lsfunc(double) const;
 
    private:
 
-   //!double pointer to a BlockVector<TPM> object, the eigenvalues of the P and Q part of a SUP matrix will be stored here.
-   BlockVector<TPM> **v_tp;
+      //!pointer to a BlockVector<TPM> object, the eigenvalues of the P part of a SUP matrix are stored here
+      BlockVector<TPM> *vI;
+
+#ifdef __Q_CON
+      BlockVector<TPM> *vQ;
+#endif
 
 #ifdef __G_CON
-
-   //!single pointer to a BlockVector<PHM> object, the eigenvalues of G part of a SUP matrix will be stored here.
-   BlockVector<PHM> *v_ph;
-
+      //!single pointer to a BlockVector<PHM> object, the eigenvalues of G part of a SUP matrix will be stored here.
+      BlockVector<PHM> *vG;
 #endif
 
 #ifdef __T1_CON
-
-   //!single pointer to a BlockVector<DPM> object, the eigenvalues of T1 part of a SUP matrix will be stored here.
-   BlockVector<DPM> *v_dp;
-
+      //!single pointer to a BlockVector<DPM> object, the eigenvalues of T1 part of a SUP matrix will be stored here.
+      BlockVector<DPM> *vT1;
 #endif
 
 #ifdef __T2_CON
-
-   //!single pointer to a BlockVector<PPHM> object, the eigenvalues of T2 part of a SUP matrix will be stored here.
-   BlockVector<PPHM> *v_pph;
-
+      //!single pointer to a BlockVector<PPHM> object, the eigenvalues of T2 part of a SUP matrix will be stored here.
+      BlockVector<PPHM> *vT2;
 #endif
-
-   //!number of particles
-   static int N;
-
-   //!dimension of sp space
-   static int M;
-
-   //!dimension of the lattice
-   static int L;
-
-   //!total dimension of the EIG object
-   static int dim;
 
 };
 

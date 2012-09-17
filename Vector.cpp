@@ -238,20 +238,6 @@ double Vector::sum() const{
 }
 
 /**
- * @return the logarithm of the product of all the elements in the vector (so the sum of all the logarithms)
- */
-double Vector::log_product() const{
-
-   double ward = 0;
-
-   for(int i = 0;i < n;++i)
-      ward += log(vector[i]);
-
-   return ward;
-
-}
-
-/**
  * @return inproduct of (*this) vector with vector_i
  * @param vector_i input vector
  */
@@ -317,15 +303,15 @@ double Vector::max() const{
 }
 
 /**
- * A function needed in the calcalation of the distance from the center, see EIG::centerpot
- *@return the result of the function
+ * Function used by the BlockVector::lsfunc function, used by the EIG::lsfunc and the line search algorithm.
+ * @param alpha steplenght in the search direction.
  */
-double Vector::centerpot(double alpha) const{
+double Vector::lsfunc(double alpha) const{
 
    double ward = 0.0;
 
-   for(int i = 0;i < n;++i)
-      ward += log(1.0 + alpha*vector[i]);
+   for(int i = 0;i < n;i++)
+      ward += vector[i]/(1.0 + alpha * vector[i]);
 
    return ward;
 

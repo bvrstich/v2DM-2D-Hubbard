@@ -14,12 +14,10 @@ CPPSRC	= 2D_hub.cpp\
             Vector.cpp\
             TPM.cpp\
             SPM.cpp\
-            PHM.cpp\
-            DPM.cpp\
-            PPHM.cpp\
             SUP.cpp\
             EIG.cpp\
-            Hamiltonian.cpp
+            Hamiltonian.cpp\
+            Tools.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 
@@ -31,7 +29,7 @@ BRIGHT_ROOT= .
 
 INCLUDE = ./include
 
-LIBS= -llapack -lblas
+LIBS= -llapack -lblas -lgsl
 
 CC	= gcc
 CXX	= g++
@@ -50,7 +48,7 @@ all:
 	@echo
 	@echo '  +++ Building $(BINNAME)...'
 	@echo	
-	$(MAKE) $(BRIGHT_ROOT)/$(BINNAME) DEFS="-DPQGT"
+	$(MAKE) $(BRIGHT_ROOT)/$(BINNAME) DEFS="-DPQ"
 	@if test $?; then \
 	   echo; echo '*************** FAILED! ***************' ; echo; \
 	 else \

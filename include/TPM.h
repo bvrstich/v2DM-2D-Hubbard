@@ -12,15 +12,13 @@ using std::vector;
 #include "BlockMatrix.h"
 
 class SUP;
-class PHM;
-class DPM;
-class PPHM;
 
 /**
  * @author Brecht Verstichel
  * @date 10-05-2010\n\n
- * This class TPM is a class written for two particle matrices with spinsymmetry and translational symemtry included, it inherits alle the function from its mother 
- * BlockMatrix, some special member functions and two lists that give the relationship between the sp and the tp basis.
+ * This class TPM is a class written for two particle matrices with spinsymmetry and translational symemtry included,
+ * It inherits alle the function from its mother BlockMatrix.
+ * Some special member functions and two lists that give the relationship between the sp and the tp basis.
  */
 class TPM : public BlockMatrix {
 
@@ -52,20 +50,8 @@ class TPM : public BlockMatrix {
 
       using BlockMatrix::operator();
 
-      //easy to access the numbers, in sp mode and blockindex
-      double operator()(int B,int a,int b,int c,int d) const;
-
       //easy to access the numbers, in sp mode and with tp spin and momentum quantumnumbers
-      double operator()(int S,int K_x,int K_y,int a,int b,int c,int d) const;
-
-      //geef N terug
-      int gN() const;
-
-      //geef M terug
-      int gM() const;
-
-      //geef L terug
-      int gL() const;
+      double operator()(int S,int a,int b,int c,int d) const;
 
       void hubbard(double U);
 
@@ -73,20 +59,11 @@ class TPM : public BlockMatrix {
       void Q(int option,const TPM &);
 
       //Q like afbeelding Q(A,B,C,tpm_d)
-      void Q(int option,double A,double B,double C,const TPM &);
-
-      //overlapmatrix afbeelding en zijn inverse
-      void S(int option,const TPM &);
+      void Q(int option,double,double,double,const TPM &);
 
       void unit();
 
       void proj_Tr();
-
-      //de hessiaan afbeelding:
-      void H(const TPM &b,const SUP &D);
-
-      //los het stelsel op
-      int solve(TPM &b,const SUP &D);
 
       void min_unit(double scale);
 
@@ -98,28 +75,19 @@ class TPM : public BlockMatrix {
       //output to file
       void out_sp(const char *) const;
 
-      //input from file
-      void in(ifstream &);
-
-      double trace_pair() const;
-
       void set_S_2();
 
-      void G(const PHM &);
+      void constr_grad(double,const TPM &,const SUP &);
 
-      void bar(const DPM &);
+      int solve(double, const SUP &,TPM &);
 
-      void T(const DPM &);
+      void H(double t,const TPM &,const SUP &);
 
-      void bar(const PPHM &);
+      double line_search(double,SUP &,const TPM &);
 
-      void T(const PPHM &);
-
-      static void init(int,int);
+      static void init();
 
       static void clear();
-
-      static void constr_overlap();
 
    private:
 
@@ -134,21 +102,6 @@ class TPM : public BlockMatrix {
 
       //!static list that returns the blockindex when given the S, K_x and K_y.
       static int ***char_block;
-
-      //!list of 6j symbols needed.
-      static double **_6j;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of sp hilbert space
-      static int M;
-
-      //!dimension of the lattice
-      static int L;
-
-      //!variables needed for the inverse overlapmatrix
-      static double Sa,Sc;
 
 };
 

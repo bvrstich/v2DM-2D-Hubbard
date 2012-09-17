@@ -8,11 +8,10 @@ using std::ostream;
 
 #include "Matrix.h"
 #include "TPM.h"
-#include "PPHM.h"
 
 /**
  * @author Brecht Verstichel
- * @date 11-05-2010\n\n
+ * @date 17-09-2012\n\n
  * This class SPM was written for single particle matrices in a spinsymmetrical and translationally invariant system. It inherits from the class Vector
  * (because it is completely diagonal in k-space) and expands it with specific memberfunction and a knowledge of the nr of sp orbitals and particles.
  */
@@ -38,41 +37,14 @@ class SPM : public Vector {
       //copy constructor
       SPM(const SPM &);
 
-      //TPM constructor
-      SPM(double ,const TPM &);
-
-      //PHM constructor
-      SPM(double ,const PHM &);
-
       //destructor
       virtual ~SPM();
 
       using Vector::operator=;
 
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
       void bar(double,const TPM &);
 
-      void bar(double,const PHM &);
-
-      void bar(double,const PPHM &);
-
-      static void init(int,int);
-
    private:
-
-      //!dimension of single particle space
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of the lattice
-      static int L;
 
 };
 

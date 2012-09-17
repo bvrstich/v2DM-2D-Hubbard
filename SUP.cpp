@@ -8,87 +8,54 @@ using std::ifstream;
 
 #include "include.h"
 
-int SUP::M;
-int SUP::N;
-int SUP::L;
-int SUP::dim;
-
-/**
- * intialize the statics
- * @param L_in dimension of the lattice
- * @param N_in the nr of particles
- */
-void SUP::init(int L_in,int N_in){
-
-   L = L_in;
-   N = N_in;
-
-   M = L*L*2;
-
-   dim = M*(M - 1);
-
-#ifdef __G_CON
-   dim += M*M;
-#endif
-
-#ifdef __T1_CON
-   dim += M*(M-1)*(M-2)/6;
-#endif
-
-#ifdef __T2_CON
-   dim += M*M*(M - 1)/2;
-#endif
-
-}
-
 /**
  * standard constructor\n
- * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix.
  */
 SUP::SUP(){
 
-   SZ_tp = new TPM * [2];
+   I = new TPM();
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i] = new TPM();
+#ifdef __Q_CON
+   Q = new TPM();
+#endif
 
 #ifdef __G_CON
-   SZ_ph = new PHM();
+   G = new PHM();
 #endif
 
 #ifdef __T1_CON
-   SZ_dp = new DPM();
+   T1 = new DPM();
 #endif
 
 #ifdef __T2_CON
-   SZ_pph = new PPHM();
+   T2 = new PPHM();
 #endif
 
 }
 
 /**
  * standard constructor\n
- * Allocates two TPM matrices and optionally a PHM, DPM or PPHM matrix, then copies the content of
- * input SUP SZ_c into it.
- * @param SZ_c input SUP
+ * Allocates, then copies the content of input SUP SZ_c into it.
+ * @param sup_c input SUP
  */
-SUP::SUP(const SUP &SZ_c){
+SUP::SUP(const SUP &sup_c){
 
-   SZ_tp = new TPM * [2];
+   I = new TPM(sup_c.gI());
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i] = new TPM(*SZ_c.SZ_tp[i]);
+#ifdef __Q_CON
+   Q = new TPM(sup_c.gQ());
+#endif
 
 #ifdef __G_CON
-   SZ_ph = new PHM(*SZ_c.SZ_ph);
+   G = new PHM(sup_c.gG());
 #endif
 
 #ifdef __T1_CON
-   SZ_dp = new DPM(*SZ_c.SZ_dp);
+   T1 = new DPM(sup_c.gT1());
 #endif
 
 #ifdef __T2_CON
-   SZ_pph = new PPHM(*SZ_c.SZ_pph);
+   T2 = new PPHM(sup_c.gT2());
 #endif
 
 }
@@ -98,50 +65,48 @@ SUP::SUP(const SUP &SZ_c){
  */
 SUP::~SUP(){
 
-   for(int i = 0;i < 2;++i)
-      delete SZ_tp[i];
+   delete I; 
 
-   delete [] SZ_tp;
+#ifdef __Q_CON
+   delete Q; 
+#endif
 
 #ifdef __G_CON
-   delete SZ_ph;
+   delete G;
 #endif
 
 #ifdef __T1_CON
-   delete SZ_dp;
+   delete T1;
 #endif
 
 #ifdef __T2_CON
-   delete SZ_pph;
+   delete T2;
 #endif
 
 }
 
 /**
  * Overload += operator
- * @param SZ_pl The SUP matrix that has to be added to this
+ * @param sup_p The SUP matrix that has to be added to this
  */
-SUP &SUP::operator+=(const SUP &SZ_pl){
+SUP &SUP::operator+=(const SUP &sup_p){
 
-   for(int i = 0;i < 2;++i)
-      (*SZ_tp[i]) += (*SZ_pl.SZ_tp[i]);
+   *I += sup_p.gI();
+
+#ifdef __Q_CON
+   *Q += sup_p.gQ();
+#endif
 
 #ifdef __G_CON
-   
-   (*SZ_ph) += (*SZ_pl.SZ_ph);
-
+   *G += sup_p.gG();
 #endif
 
 #ifdef __T1_CON
-
-   (*SZ_dp) += (*SZ_pl.SZ_dp);
-
+   *T1 += sup_p.gT1();
 #endif
 
 #ifdef __T2_CON
-
-   (*SZ_pph) += (*SZ_pl.SZ_pph);
-
+   *T2 += sup_p.gT2();
 #endif
 
    return *this;
@@ -150,29 +115,26 @@ SUP &SUP::operator+=(const SUP &SZ_pl){
 
 /**
  * Overload -= operator
- * @param SZ_pl The SUP that will be deducted from this
+ * @param sup_p The SUP matrix that has to be added to this
  */
-SUP &SUP::operator-=(const SUP &SZ_pl){
+SUP &SUP::operator-=(const SUP &sup_p){
 
-   for(int i = 0;i < 2;++i)
-      (*SZ_tp[i]) -= (*SZ_pl.SZ_tp[i]);
+   *I -= sup_p.gI();
+
+#ifdef __Q_CON
+   *Q -= sup_p.gQ();
+#endif
 
 #ifdef __G_CON
-   
-   (*SZ_ph) -= (*SZ_pl.SZ_ph);
-
+   *G -= sup_p.gG();
 #endif
 
 #ifdef __T1_CON
-
-   (*SZ_dp) -= (*SZ_pl.SZ_dp);
-
+   *T1 -= sup_p.gT1();
 #endif
 
 #ifdef __T2_CON
-
-   (*SZ_pph) -= (*SZ_pl.SZ_pph);
-
+   *T2 -= sup_p.gT2();
 #endif
 
    return *this;
@@ -180,30 +142,27 @@ SUP &SUP::operator-=(const SUP &SZ_pl){
 }
 
 /**
- * Overload equality operator, copy SZ_c into this
- * @param SZ_c SUP_PQ to be copied into this
+ * Overload = operator, equalitiy operator
+ * @param sup_c set (*this) equal to sup_c
  */
-SUP &SUP::operator=(const SUP &SZ_c){
+SUP &SUP::operator=(const SUP &sup_c){
 
-   (*SZ_tp[0]) = (*SZ_c.SZ_tp[0]);
-   (*SZ_tp[1]) = (*SZ_c.SZ_tp[1]);
+   *I = sup_c.gI();
+
+#ifdef __Q_CON
+   *Q = sup_c.gQ();
+#endif
 
 #ifdef __G_CON
-
-   (*SZ_ph) = (*SZ_c.SZ_ph);
-
+   *G = sup_c.gG();
 #endif
 
 #ifdef __T1_CON
-
-   (*SZ_dp) = (*SZ_c.SZ_dp);
-
+   *T1 = sup_c.gT1();
 #endif
 
 #ifdef __T2_CON
-
-   (*SZ_pph) = (*SZ_c.SZ_pph);
-
+   *T2 = sup_c.gT2();
 #endif
 
    return *this;
@@ -217,25 +176,22 @@ SUP &SUP::operator=(const SUP &SZ_c){
  */
 SUP &SUP::operator=(double &a){
 
-   (*SZ_tp[0]) = a;
-   (*SZ_tp[1]) = a;
+   *I = a;
+
+#ifdef __Q_CON
+   *Q = a;
+#endif
 
 #ifdef __G_CON
-
-   (*SZ_ph) = a;
-
+   *G = a;
 #endif
 
 #ifdef __T1_CON
-
-   (*SZ_dp) = a;
-
+   *T1 = a;
 #endif
 
 #ifdef __T2_CON
-
-   (*SZ_pph) = a;
-
+   *T2 = a;
 #endif
 
    return *this;
@@ -243,44 +199,65 @@ SUP &SUP::operator=(double &a){
 }
 
 /**
- * @param i which block you want to have the pointer to.
- * @return pointer to the individual TPM blocks: SZ_tp[i]
+ * @return pointer to the individual TPM block: I 
  */
-TPM &SUP::tpm(int i){
+TPM &SUP::gI(){
 
-   return *SZ_tp[i];
+   return *I;
 
 }
 
 /**
  * const version
- * @param i which block you want to have the pointer to.
- * @return pointer to the individual TPM blocks: SZ_tp[i]
+ * @return pointer to the individual TPM block: I
  */
-const TPM &SUP::tpm(int i) const{
+const TPM &SUP::gI() const{
 
-   return *SZ_tp[i];
+   return *I;
 
 }
+
+#ifdef __Q_CON
+
+/**
+ * @return pointer to the individual TPM block: Q 
+ */
+TPM &SUP::gQ(){
+
+   return *Q;
+
+}
+
+/**
+ * const version
+ * @return pointer to the individual TPM blocks: Q
+ */
+const TPM &SUP::gQ() const{
+
+   return *Q;
+
+}
+
+#endif
 
 #ifdef __G_CON
 
 /**
- * @return pointer to the PHM block: SZ_ph
+ * @return pointer to the PHM block: G
  */
-PHM &SUP::phm(){
+PHM &SUP::gG(){
 
-   return *SZ_ph;
+   return *G;
 
 }
 
 /**
  * const version
- * @return pointer to the PHM block: SZ_ph
+ * @return pointer to the PHM block: G
  */
-const PHM &SUP::phm() const{
+const PHM &SUP::gG() const{
 
-   return *SZ_ph;
+   return *G;
 
 }
 
@@ -289,21 +266,21 @@ const PHM &SUP::phm() const{
 #ifdef __T1_CON
 
 /**
- * @return pointer to the DPM block: SZ_dp
+ * @return pointer to the DPM block: T1
  */
-DPM &SUP::dpm(){
+DPM &SUP::gT1(){
 
-   return *SZ_dp;
+   return *T1;
 
 }
 
 /**
  * const version
- * @return pointer to the DPM block: SZ_dp
+ * @return pointer to the DPM block: T1
  */
-const DPM &SUP::dpm() const{
+const DPM &SUP::gT1() const{
 
-   return *SZ_dp;
+   return *T1;
 
 }
 
@@ -313,60 +290,43 @@ const DPM &SUP::dpm() const{
 
 /**
  * const version
- * @return pointer to the PPHM block: SZ_pph
+ * @return pointer to the PPHM block: T2
  */
-const PPHM &SUP::pphm() const{
+const PPHM &SUP::gT2() const{
 
-   return *SZ_pph;
+   return *T2;
 
 }
 
 /**
- * @return pointer to the PPHM block: SZ_pph
+ * @return pointer to the PPHM block: T2
  */
-PPHM &SUP::pphm(){
+PPHM &SUP::gT2(){
 
-   return *SZ_pph;
+   return *T2;
 
 }
 
 #endif
 
-/**
- * Initialization of the SUP matrix S, is just u^0: see primal_dual.pdf for more information
- */
-void SUP::init_S(){
+ostream &operator<<(ostream &output,const SUP &sup_p){
 
-   (*SZ_tp[0]).unit();
+   output << sup_p.gI() << std::endl;
 
-   this->fill();
-
-}
-
-ostream &operator<<(ostream &output,const SUP &SZ_p){
-
-   output << (*SZ_p.SZ_tp[0]) << std::endl;
-   output << (*SZ_p.SZ_tp[1]);
+#ifdef __Q_CON
+   output << sup_p.gQ() << std::endl;
+#endif
 
 #ifdef __G_CON
-
-   output << std::endl;
-   output << (*SZ_p.SZ_ph);
-
+   output << sup_p.gG() << std::endl;
 #endif
 
 #ifdef __T1_CON
-
-   output << std::endl;
-   output << (*SZ_p.SZ_dp);
-
+   output << sup_p.gT1() << std::endl;
 #endif
 
 #ifdef __T2_CON
-
-   output << std::endl;
-   output << (*SZ_p.SZ_pph);
-
+   output << sup_p.gT2() << std::endl;
 #endif
 
    return output;
@@ -378,106 +338,48 @@ ostream &operator<<(ostream &output,const SUP &SZ_p){
  */
 void SUP::fill_Random(){
 
-   SZ_tp[0]->fill_Random();
-   SZ_tp[1]->fill_Random();
+   I->fill_Random();
+
+#ifdef __Q_CON
+   Q->fill_Random();
+#endif
 
 #ifdef __G_CON
-
-   SZ_ph->fill_Random();
-
+   G->fill_Random();
 #endif
 
 #ifdef __T1_CON
-
-   SZ_dp->fill_Random();
-
+   T1->fill_Random();
 #endif
 
 #ifdef __T2_CON
-
-   SZ_pph->fill_Random();
-
+   T2->fill_Random();
 #endif
 
 }
 
 /**
- * Initialisation for dual SUP matrix Z, see primal_dual.pdf for info.
+ * @param SZ_i input SUP sup_i
+ * @return inproduct between this and input matrix sup_i, defined as Tr(this sup_i)
  */
-void SUP::init_Z(double alpha,const TPM &ham,const SUP &u_0){
+double SUP::ddot(const SUP &sup_i) const{
 
-   this->fill_Random();
+   double ward = I->ddot(sup_i.gI());
 
-   this->proj_C(ham);
-
-   //nog een eenheidsmatrix maal constante bijtellen zodat Z positief definiet is:
-   this->daxpy(alpha,u_0); 
-
-}
-
-/**
- * @return number of particles
- */
-int SUP::gN() const {
-
-   return N;
-
-}
-
-/**
- * @return dimension of sp space
- */
-int SUP::gM() const{
-
-   return M;
-
-}
-
-/**
- * @return dimension of the lattice
- */
-int SUP::gL() const{
-
-   return L;
-
-}
-
-/**
- * @return total dimension of SUP (carrier) space
- */
-int SUP::gdim() const{
-
-   return dim;
-
-}
-
-/**
- * @param SZ_i input SUP_PQ SZ_i
- * @return inproduct between this and input matrix SZ_i, defined as Tr(this SZ_i)
- */
-double SUP::ddot(const SUP &SZ_i) const{
-
-   double ward = 0.0;
-
-   for(int i = 0;i < 2;++i)
-      ward += SZ_tp[i]->ddot(*SZ_i.SZ_tp[i]);
+#ifdef __Q_CON
+   ward += Q->ddot(sup_i.gQ());
+#endif
 
 #ifdef __G_CON
-   
-   ward += SZ_ph->ddot(*SZ_i.SZ_ph);
-
+   ward += G->ddot(sup_i.gG());
 #endif
 
 #ifdef __T1_CON
-
-   ward += SZ_dp->ddot(*SZ_i.SZ_dp);
-
+   ward += T1->ddot(sup_i.gT1());
 #endif
 
 #ifdef __T2_CON
-
-   ward += SZ_pph->ddot(*SZ_i.SZ_pph);
-
+   ward += T2->ddot(sup_i.gT2());
 #endif
 
    return ward;
@@ -490,25 +392,22 @@ double SUP::ddot(const SUP &SZ_i) const{
  */
 void SUP::invert(){
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i]->invert();
+   I->invert();
+
+#ifdef __Q_CON
+   Q->invert();
+#endif
 
 #ifdef __G_CON
-   
-   SZ_ph->invert();
-
+   G->invert();
 #endif
 
 #ifdef __T1_CON
-   
-   SZ_dp->invert();
-
+   T1->invert();
 #endif
 
 #ifdef __T2_CON
-   
-   SZ_pph->invert();
-
+   T2->invert();
 #endif
 
 }
@@ -519,102 +418,23 @@ void SUP::invert(){
  */
 void SUP::dscal(double alpha){
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i]->dscal(alpha);
+   I->dscal(alpha);
+
+#ifdef __Q_CON
+   Q->dscal(alpha);
+#endif
 
 #ifdef __G_CON
-   
-   SZ_ph->dscal(alpha);
-
+   G->dscal(alpha);
 #endif
 
 #ifdef __T1_CON
-   
-   SZ_dp->dscal(alpha);
-
+   T1->dscal(alpha);
 #endif
 
 #ifdef __T2_CON
-   
-   SZ_pph->dscal(alpha);
-
+   T2->dscal(alpha);
 #endif
-
-}
-
-/**
- * Orthogonal projection of a general SUP matrix diag[ M M_Q ( M_G M_T1 M_T2 ) ] onto U space: diag[ M_u Q(M_u) ( G(M_u) T1(M_u) T2(M_u) ) ]
- * for more information see primal_dual.pdf
- */
-void SUP::proj_U(){
-  
-   //eerst M_Gamma + Q(M_Q) + ( G(M_G) + T1(M_T1) + T2(M_T2) ) in O stoppen
-   TPM O;
-
-   O.collaps(1,*this);
-
-   //dan de inverse overlapmatrix hierop laten inwerken en in this[0] stoppen
-   SZ_tp[0]->S(-1,O);
-
-   //fill up the rest with the right maps
-   this->fill();
-
-}
-
-/**
- * Project the general SUP matrix (*this) orthogonally onto the linear space for which\n\n
- * Tr(Z u^i) = h^i      with h^i = Tr(tpm f^i)\n\n
- * is valid.
- * @param tpm input TPM (mostly the hamiltonian of the problem)
- */
-void SUP::proj_C(const TPM &tpm){
-
-   TPM hulp;
-
-   hulp.collaps(1,*this);
-
-   hulp -= tpm;
-
-   //Z_res is the orthogonal piece of this that will be deducted,
-   //so the piece of this in the U-space - ham
-   SUP Z_res;
-
-   //apply iverse S to it and put it in Z_res.tpm(0)
-   (Z_res.tpm(0)).S(-1,hulp);
-
-   //and fill it up Johnny
-   Z_res.fill();
-
-   *this -= Z_res;
-
-}
-
-/**
- * Construct the D matrix and put it in this, D is the matrix matrix of the hessian, see primal_dual.pdf for more information
- * @param S The primal SUP matrix S
- * @param Z The dual SUP matrix Z
- */
-void SUP::D(const SUP &S,const SUP &Z){
-
-   //positieve vierkantswortel uit Z
-   SUP Z_copy(Z);
-
-   Z_copy.sqrt(1);
-
-   //links en rechts vermenigvuldigen met wortel Z
-   SUP hulp;
-
-   hulp.L_map(Z_copy,S);
-
-   hulp.sqrt(1);
-
-   //negatieve vierkantswortel uit Z
-   Z_copy = Z;
-
-   Z_copy.sqrt(-1);
-
-   //en links en rechts hulp vermenigvuldigen met die wortel, en in this steken:
-   this->L_map(Z_copy,hulp);
 
 }
 
@@ -624,25 +444,22 @@ void SUP::D(const SUP &S,const SUP &Z){
  */
 void SUP::sqrt(int option){
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i]->sqrt(option);
+   I->sqrt(option);
+
+#ifdef __Q_CON
+   Q->sqrt(option);
+#endif
 
 #ifdef __G_CON
-
-   SZ_ph->sqrt(option);
-
+   G->sqrt(option);
 #endif
 
 #ifdef __T1_CON
-
-   SZ_dp->sqrt(option);
-
+   T1->sqrt(option);
 #endif
 
 #ifdef __T2_CON
-
-   SZ_pph->sqrt(option);
-
+   T2->sqrt(option);
 #endif
 
 }
@@ -655,103 +472,77 @@ void SUP::sqrt(int option){
  */
 void SUP::L_map(const SUP &map,const SUP &object){
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i]->L_map(map.tpm(i),object.tpm(i));
+   I->L_map(map.gI(),object.gI());
+
+#ifdef __Q_CON
+   Q->L_map(map.gQ(),object.gQ());
+#endif
 
 #ifdef __G_CON
-
-   SZ_ph->L_map(map.phm(),object.phm());
-
+   G->L_map(map.gG(),object.gG());
 #endif
 
 #ifdef __T1_CON
-
-   SZ_dp->L_map(map.dpm(),object.dpm());
-
+   T1->L_map(map.gT1(),object.gT1());
 #endif
 
 #ifdef __T2_CON
-
-   SZ_pph->L_map(map.pphm(),object.pphm());
-
+   T2->L_map(map.gT2(),object.gT2());
 #endif
 
 }
 
 /**
- * add the SUP SZ_p times the constant alpha to this
- * @param alpha the constant to multiply the SZ_p with
- * @param SZ_p the SUP to be multiplied by alpha and added to (*this)
+ * add the SUP sup_p times the constant alpha to this
+ * @param alpha the constant to multiply the sup_p with
+ * @param sup_p the SUP to be multiplied by alpha and added to (*this)
  */
-void SUP::daxpy(double alpha,const SUP &SZ_p){
+void SUP::daxpy(double alpha,const SUP &sup_p){
 
-   for(int i = 0;i < 2;++i)
-      SZ_tp[i]->daxpy(alpha,SZ_p.tpm(i));
+   I->daxpy(alpha,sup_p.gI());
+
+#ifdef __Q_CON
+   Q->daxpy(alpha,sup_p.gQ());
+#endif
 
 #ifdef __G_CON
-   
-   SZ_ph->daxpy(alpha,SZ_p.phm());
-
+   G->daxpy(alpha,sup_p.gG());
 #endif
 
 #ifdef __T1_CON
-   
-   SZ_dp->daxpy(alpha,SZ_p.dpm());
-
+   T1->daxpy(alpha,sup_p.gT1());
 #endif
 
 #ifdef __T2_CON
-   
-   SZ_pph->daxpy(alpha,SZ_p.pphm());
-
+   T2->daxpy(alpha,sup_p.gT2());
 #endif
-
-}
-
-/**
- * Orthogonal projection of a general SUP matrix [ M M_Q ( M_G M_T1 M_T2 ) ] onto the orthogonal complement of the U space (C space)
- * See primal_dual.pdf for more information
- */
-void SUP::proj_C(){
-
-   SUP Z_copy(*this);
-
-   //projecteer op de U ruimte
-   Z_copy.proj_U();
-
-   //en het orthogonaal complement nemen:
-   *this -= Z_copy;
 
 }
 
 /**
  * General matrixproduct between two SUP matrices, act with Matrix::mprod on every block
- * 
  * @param A left hand matrix
  * @param B right hand matrix
  * @return The product AB
  */
 SUP &SUP::mprod(const SUP &A,const SUP &B){
 
-   for(int i= 0;i < 2;++i)
-      SZ_tp[i]->mprod(A.tpm(i),B.tpm(i));
+   I->mprod(A.gI(),B.gI());
+
+#ifdef __Q_CON
+   Q->mprod(A.gQ(),B.gQ());
+#endif
 
 #ifdef __G_CON
-
-   SZ_ph->mprod(A.phm(),B.phm());
-
+   G->mprod(A.gG(),B.gG());
 #endif
 
 #ifdef __T1_CON
-
-   SZ_dp->mprod(A.dpm(),B.dpm());
-
+   T1->mprod(A.gT1(),B.gT1());
 #endif
 
 #ifdef __T2_CON
-
-   SZ_pph->mprod(A.pphm(),B.pphm());
-
+   T2->mprod(A.gT2(),B.gT2());
 #endif
 
    return *this;
@@ -764,25 +555,22 @@ SUP &SUP::mprod(const SUP &A,const SUP &B){
  */
 void SUP::fill(const TPM &tpm){
 
-   *SZ_tp[0] = tpm;
-   SZ_tp[1]->Q(1,tpm);
+   *I = tpm;
+
+#ifdef __Q_CON
+   Q->Q(1,tpm);
+#endif
 
 #ifdef __G_CON
-   
-   SZ_ph->G(tpm);
-
+   G->G(tpm);
 #endif
 
 #ifdef __T1_CON
-   
-   SZ_dp->T(tpm);
-
+   T1->T(tpm);
 #endif
 
 #ifdef __T2_CON
-   
-   SZ_pph->T(tpm);
-
+   T2->T(tpm);
 #endif
 
 }
@@ -793,322 +581,20 @@ void SUP::fill(const TPM &tpm){
  */
 void SUP::fill(){
 
-   SZ_tp[1]->Q(1,*SZ_tp[0]);
+#ifdef __Q_CON
+   Q->Q(1,*I);
+#endif
 
 #ifdef __G_CON
-
-   SZ_ph->G(*SZ_tp[0]);
-
+   G->G(*I);
 #endif 
 
 #ifdef __T1_CON
-
-   SZ_dp->T(*SZ_tp[0]);
-
+   T1->T(*I);
 #endif 
 
 #ifdef __T2_CON
-
-   SZ_pph->T(*SZ_tp[0]);
-
+   T2->T(*I);
 #endif 
-
-}
-
-/**
- * Implementation of the linear conjugate gradient algorithm for the solution of the dual Newton system\n\n
- * H(*this) = B in which H is the dual hessian map
- * @param B right hand side of the equation
- * @param D SUP matrix that defines the structure of the hessian map (the metric) (inverse of the primal Newton equation hessian)
- * @return return the number of iteration required to converge
- */
-int SUP::solve(SUP &B,const SUP &D){
-
-   SUP HB;
-   HB.H(*this,D);
-
-   B -= HB;
-
-   //de r initialiseren op B - H DZ
-   SUP r(B);
-
-   double rr = r.ddot(r);
-   double rr_old,ward;
-
-   int cg_iter = 0;
-
-   while(rr > 1.0e-10){
-
-      ++cg_iter;
-
-      HB.H(B,D);
-
-      ward = rr/B.ddot(HB);
-
-      //delta += ward*b
-      this->daxpy(ward,B);
-
-      //r -= ward*HB
-      r.daxpy(-ward,HB);
-
-      //nieuwe r_norm maken
-      rr_old = rr;
-      rr = r.ddot(r);
-
-      //eerst herschalen van b
-      B.dscal(rr/rr_old);
-
-      //dan r er bijtellen
-      B += r;
-
-   }
-   
-   return cg_iter;
-
-}
-
-/**
- * The dual hessian map:\n\n
- * HB = DBD (dus SUP::L_map), projected onto C-space (SUP::proj_C)
- * @param B SUP matrix onto which the hessian works.
- * @param D SUP matrix that defines the structure of the map (metric)
- */
-void SUP::H(const SUP &B,const SUP &D){
-
-   this->L_map(D,B);
-
-   this->proj_C();
-
-}
-
-/**
- * @return Deviation from the central path measured through the logarithmic potential, it's a measure for
- * the deviation of the product of the primal with the dual matrix (SZ) from the unit matrix.\n
- * Usage of the function: S.center_dev(Z) gives returns the deviation.\n\n
- * (*this) = S = primal matrix of the problem
- * @param Z = dual matrix of the problem
- */
-double SUP::center_dev(const SUP &Z) const{
-
-   SUP sqrt_S(*this);
-
-   sqrt_S.sqrt(1);
-
-   SUP SZ;
-   SZ.L_map(sqrt_S,Z);
-
-   EIG eig(SZ);
-
-   return eig.center_dev();
-
-}
-
-/**
- * Line search function that checks how large a step you can take in a given primal dual predictor direction (DS,DZ), starting from 
- * the current primal dual point (S,Z), before deviating beyond max_dev from the central path.\n\n
- * (*this) = DS --> primal search direction
- * @param DZ dual search direction
- * @param S Current primal point
- * @param Z Current dual point
- * @param max_dev number (double) input by which you can tell the function how far you want to deviate from the central path after the step.
- */
-double SUP::line_search(const SUP &DZ,const SUP &S,const SUP &Z,double max_dev) const{
-
-   //eerst de huidige deviatie van het centraal pad nemen:
-   double center_dev = S.center_dev(Z);
-
-   //eigenwaarden zoeken van S^{-1/2} DS S^{-1/2} en Z^{-1/2} DZ Z^{-1/2}
-
-   //kopieer S in de zogeheten wortel:
-   SUP wortel(S);
-
-   //maak negatieve vierkantswortel uit S
-   wortel.sqrt(-1);
-
-   //de L_map
-   SUP hulp;
-   hulp.L_map(wortel,*this);
-
-   //eigenwaarden in eigen_S stoppen
-   EIG eigen_S(hulp);
-
-   //nu idem voor Z
-   wortel = Z;
-
-   wortel.sqrt(-1);
-
-   hulp.L_map(wortel,DZ);
-
-   EIG eigen_Z(hulp);
-
-   //nog c_S en c_Z uitrekenen:
-   double pd_gap = S.ddot(Z);
-
-   //c_S = Tr (DS Z)/Tr (SZ)
-   double c_S = this->ddot(Z)/pd_gap;
-
-   //c_Z = Tr (S DZ)/Tr (SZ)
-   double c_Z = S.ddot(DZ)/pd_gap;
-
-   //waar zitten de singulariteiten: tot waar mag ik zoeken?
-   double a_max = -1.0/eigen_S.min();
-   double b_max = -1.0/eigen_Z.min();
-
-   //a_max is de waarde tot waar ik zal zoeken:
-   if(b_max < a_max)
-      a_max = b_max;
-
-   double a = 0.0;
-   double b = a_max;
-
-   double c = (a + b)/2.0;
-
-   //bissectiemethode om stapgrootte te bepalen:
-   while(b - a > 1.0e-5){
-
-      c = (a + b)/2.0;
-
-      if( (center_dev + eigen_S.centerpot(c,eigen_Z,c_S,c_Z) - max_dev) < 0.0 )
-         a = c;
-      else
-         b = c;
-
-   }
-
-   return c;
-
-}
-
-/*
- * Output the SUP matrix to a file, associated with the ofstream object output
- * @param output The ofstream object you will dump the SUP in.
- */
-void SUP::out(ofstream &output) const{
-
-   output.precision(15);
-
-   //P
-   for(int B = 0;B < this->tpm(0).gnr();++B){
-
-      for(int i = 0;i < this->tpm(0).gdim(B);++i)
-         for(int j = 0;j < this->tpm(0).gdim(B);++j)
-            output << i << "\t" << j << "\t" << this->tpm(0)(B,i,j) << std::endl;
-
-   }
-
-   //Q
-   for(int B = 0;B < this->tpm(1).gnr();++B){
-
-      for(int i = 0;i < this->tpm(1).gdim(B);++i)
-         for(int j = 0;j < this->tpm(1).gdim(B);++j)
-            output << i << "\t" << j << "\t" << this->tpm(1)(B,i,j) << std::endl;
-
-   }
-
-#ifdef __G_CON
-
-   //G
-   for(int B = 0;B < this->phm().gnr();++B){
-
-      for(int i = 0;i < this->phm().gdim(B);++i)
-         for(int j = 0;j < this->phm().gdim(B);++j)
-            output << i << "\t" << j << "\t" << this->phm()(B,i,j) << std::endl;
-
-   }
-
-#endif
-
-#ifdef __T1_CON
-
-   //T1
-   for(int B = 0;B < this->dpm().gnr();++B){
-
-      for(int i = 0;i < this->dpm().gdim(B);++i)
-         for(int j = 0;j < this->dpm().gdim(B);++j)
-            output << i << "\t" << j << "\t" << this->dpm()(B,i,j) << std::endl;
-
-   }
-
-#endif
-
-#ifdef __T2_CON
-
-   //T2
-   for(int B = 0;B < this->pphm().gnr();++B){
-
-      for(int i = 0;i < this->pphm().gdim(B);++i)
-         for(int j = 0;j < this->pphm().gdim(B);++j)
-            output << i << "\t" << j << "\t" << this->pphm()(B,i,j) << std::endl;
-
-   }
-
-#endif
-
-}
-
-/*
- * Input a SUP matrix from a file
- * @param input ifstream object association with input file.
- */
-void SUP::in(ifstream &input){
-
-   int I,J;
-
-   //first P
-   for(int B = 0;B < (this->tpm(0)).gnr();++B){
-
-      for(int i = 0;i < (this->tpm(0)).gdim(B);++i)
-         for(int j = 0;j < (this->tpm(0)).gdim(B);++j)
-            input >> I >> J >> (this->tpm(0))(B,i,j);
-
-   }
-
-   //then Q
-   for(int B = 0;B < (this->tpm(1)).gnr();++B){
-
-      for(int i = 0;i < (this->tpm(1)).gdim(B);++i)
-         for(int j = 0;j < (this->tpm(1)).gdim(B);++j)
-            input >> I >> J >> (this->tpm(1))(B,i,j);
-
-   }
-
-#ifdef __G_CON
-
-   //then G
-   for(int B = 0;B < (this->phm()).gnr();++B){
-
-      for(int i = 0;i < (this->phm()).gdim(B);++i)
-         for(int j = 0;j < (this->phm()).gdim(B);++j)
-            input >> I >> J >> (this->phm())(B,i,j);
-
-   }
-
-#endif
-
-#ifdef __T1_CON
-
-   //then T1
-   for(int B = 0;B < (this->dpm()).gnr();++B){
-
-      for(int i = 0;i < (this->dpm()).gdim(B);++i)
-         for(int j = 0;j < (this->dpm()).gdim(B);++j)
-            input >> I >> J >> (this->dpm())(B,i,j);
-
-   }
-
-#endif
-
-#ifdef __T2_CON
-
-   //(finally) T2
-   for(int B = 0;B < (this->pphm()).gnr();++B){
-
-      for(int i = 0;i < (this->pphm()).gdim(B);++i)
-         for(int j = 0;j < (this->pphm()).gdim(B);++j)
-            input >> I >> J >> (this->pphm())(B,i,j);
-
-   }
-
-#endif
 
 }

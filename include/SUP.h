@@ -9,18 +9,23 @@ using std::ofstream;
 using std::ifstream;
 
 #include "TPM.h"
-#include "PHM.h"
-#include "DPM.h"
-#include "PPHM.h"
+
+#ifdef PQ
+
+#define __Q_CON
+
+#endif
 
 #ifdef PQG
 
+#define __Q_CON
 #define __G_CON
 
 #endif
 
 #ifdef PQGT1
 
+#define __Q_CON
 #define __G_CON
 #define __T1_CON
 
@@ -28,6 +33,7 @@ using std::ifstream;
 
 #ifdef PQGT2
 
+#define __Q_CON
 #define __G_CON
 #define __T2_CON
 
@@ -35,6 +41,7 @@ using std::ifstream;
 
 #ifdef PQGT
 
+#define __Q_CON
 #define __G_CON
 #define __T1_CON
 #define __T2_CON
@@ -47,9 +54,7 @@ class EIG;
  * @author Brecht Verstichel
  * @date 09-03-2010\n\n
  * This class, SUP is a blockmatrix over the carrierspace's of active N-representability conditions. 
- * This class contains two TPM objects, and if compiled with the right option a PHM or DPM object, 
- * You have to remember that these matrices are independent of each other (by which I mean that TPM::Q(SUP_PQ::tpm (0))
- * is not neccesarily equal to SUP_PQ::tpm (1)) etc. .
+ * This class contains two TPM objects, and if compiled with the right option a PHM, DPM or PPHM object, 
  */
 class SUP{
   
@@ -60,9 +65,9 @@ class SUP{
     * For output onto the screen type: \n\n
     * cout << sup_p << endl;\n\n
     * @param output The stream to which you are writing (e.g. cout)
-    * @param SZ_p the SUP you want to print
+    * @param sup_p the SUP you want to print
     */
-   friend ostream &operator<<(ostream &output,const SUP &SZ_p);
+   friend ostream &operator<<(ostream &output,const SUP &sup_p);
 
    public:
 
@@ -87,45 +92,17 @@ class SUP{
       //overload equality operator
       SUP &operator=(double &);
 
-      TPM &tpm(int i);
-
-      const TPM &tpm(int i) const;
-
-      //initialiseer S
-      void init_S();
-
-      //initialiseer Z
-      void init_Z(double alpha,const TPM &ham,const SUP &u_0);
-
-      int gN() const;
-
-      int gM() const;
-
-      int gL() const;
-
-      int gdim() const;
-
       double ddot(const SUP &) const;
 
       void invert();
 
       void dscal(double alpha);
 
-      void proj_U();
-
-      void proj_C(const TPM &);
-
-      //maak de matrix D, nodig voor de hessiaan van het stelsel
-      void D(const SUP &S,const SUP &Z);
-
-      //positieve of negatieve vierkantswortel uit een supermatrix
       void sqrt(int option);
 
       void L_map(const SUP &,const SUP &);
 
       void daxpy(double alpha,const SUP &);
-
-      void proj_C();
 
       SUP &mprod(const SUP &,const SUP &);
 
@@ -133,82 +110,59 @@ class SUP{
 
       void fill();
 
-      int solve(SUP &B,const SUP &D);
-
-      void H(const SUP &B,const SUP &D);
-
-      double center_dev(const SUP &Z) const;
-
-      double line_search(const SUP &DZ,const SUP &S,const SUP &Z,double max_dev) const;
-
       void fill_Random();
 
-      void out(ofstream &) const;
+      TPM &gI();
 
-      void in(ifstream &);
+      const TPM &gI() const;
+
+#ifdef __Q_CON
+      TPM &gQ();
+
+      const TPM &gQ() const;
+#endif
 
 #ifdef __G_CON
+      PHM &gG();
 
-      PHM &phm();
-
-      const PHM &phm() const;
-
+      const PHM &gG() const;
 #endif
 
 #ifdef __T1_CON
-      
-      DPM &dpm();
+      DPM &gT1();
 
-      const DPM &dpm() const;
-
+      const DPM &gT1() const;
 #endif
 
 #ifdef __T2_CON
+      PPHM &gT2();
 
-      PPHM &pphm();
-
-      const PPHM &pphm() const;
-
+      const PPHM &gT2() const;
 #endif
-
-      static void init(int,int);
 
    private:
 
-      //!double pointer of TPM's, will contain the P and Q block of the SUP in the first and second block.
-      TPM **SZ_tp;
+      //!pointer to the TPM object containing the I contribution to the SUP matrix
+      TPM *I;
 
-      //!number of sp orbitals
-      static int M;
-
-      //!nr of particles
-      static int N;
-
-      //!dimension of the lattice
-      static int L;
-
-      //!total dimension of the SUP matrix
-      static int dim;
+#ifdef __Q_CON
+      //!pointer to the TPM object containing the Q contribution to the SUP matrix
+      TPM *Q;
+#endif
 
 #ifdef __G_CON
-
       //!pointer to the particle hole matrix
-      PHM *SZ_ph;
-
+      PHM *G;
 #endif
 
 #ifdef __T1_CON
-      
-      //!pointer tot he three particles matrix DPM
-      DPM *SZ_dp;
-
+      //!pointer to the three-particle matrix DPM
+      DPM *T1;
 #endif
 
 #ifdef __T2_CON
-
-      //!pointer tot he three particles matrix DPM
-      PPHM *SZ_pph;
-
+      //!pointer to the two-particle-one-hole matrix PPHM
+      PPHM *T2;
 #endif
 
 };

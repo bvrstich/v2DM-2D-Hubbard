@@ -78,8 +78,6 @@ class Vector{
 
       double sum() const;
 
-      double log_product() const;
-
       double ddot(const Vector &) const;
 
       void dscal(double alpha);
@@ -88,7 +86,7 @@ class Vector{
       
       double max() const;
 
-      double centerpot(double ) const;
+      double lsfunc(double) const;
 
    private:
 

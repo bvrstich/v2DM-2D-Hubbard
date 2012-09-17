@@ -18,7 +18,7 @@ class Hamiltonian{
    public:
 
       //initializes the lists.
-      static void init(int);
+      static void init();
 
       //clears the lists;
       static void clear();
@@ -34,15 +34,8 @@ class Hamiltonian{
 
       static int bar(int);
 
-
    private:
       
-      //!the dimension of the lattice
-      static int L;
-
-      //!the number of spation orbitals in sp-hilbert space
-      static int M;
-
       //!static list that translates the two indices of the 2D hubbard model to one sp index.
       static int **xy_a;
 
