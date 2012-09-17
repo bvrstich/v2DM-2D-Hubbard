@@ -96,7 +96,7 @@ int main(int argc,char **argv)
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
    // mazziotti uses 1.6 for this
-   double mazzy = 2.0;
+   double mazzy = 1.0;
 
    int iter_dual,iter_primal(0);
    int max_iter = 1;
@@ -205,7 +205,5 @@ int main(int argc,char **argv)
    return 0;
 
 }
-
-/* vim: set ts=3 sw=3 expandtab :*/
 
 /* vim: set ts=3 sw=3 expandtab :*/
