@@ -771,3 +771,71 @@ double TPM::line_search(double t,SUP &Z,const TPM &ham){
    return c;
 
 }
+
+/**
+ * The G down map, maps a PHM object onto a TPM object using the G map.
+ * @param phm input PHM
+ */
+void TPM::G(const PHM &phm){
+
+   SPM spm;
+   spm.bar(1.0/(Tools::gN() - 1.0),phm);
+
+   int a,b,c,d;
+
+   //the conjugated indices
+   int a_,b_,c_,d_;
+
+   int S;
+
+   int sign;
+
+   for(int B = 0;B < gnr();++B){
+
+      S = block_char[B][0];
+
+      sign = 1 - 2*S;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
+
+         a_ = Hamiltonian::bar(a);
+         b_ = Hamiltonian::bar(b);
+
+         //tp part is only nondiagonal part
+         for(int j = i;j < gdim(B);++j){
+
+            c = t2s[B][j][0];
+            d = t2s[B][j][1];
+
+            c_ = Hamiltonian::bar(c);
+            d_ = Hamiltonian::bar(d);
+
+            (*this)(B,i,j) = 0.0;
+
+            //four ph terms:
+            for(int Z = 0;Z < 2;++Z)
+               (*this)(B,i,j) -= (2.0*Z + 1.0) * Tools::g6j(0,0,S,Z) * ( phm(Z,a,d_,c,b_) + phm(Z,b,c_ ,d, a_) 
+               
+                     + sign * ( phm(Z,b,d_ ,c, a_ ) + phm(Z,a,c_,d,b_) ) );
+
+            //norm:
+            if(a == b)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+
+            if(c == d)
+               (*this)(B,i,j) /= std::sqrt(2.0);
+
+         }
+
+         (*this)(B,i,i) += spm[a] + spm[b];
+
+      }
+
+   }
+
+   this->symmetrize();
+
+}

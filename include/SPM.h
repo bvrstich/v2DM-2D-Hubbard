@@ -9,6 +9,8 @@ using std::ostream;
 #include "Matrix.h"
 #include "TPM.h"
 
+class PHM;
+
 /**
  * @author Brecht Verstichel
  * @date 17-09-2012\n\n
@@ -43,6 +45,8 @@ class SPM : public Vector {
       using Vector::operator=;
 
       void bar(double,const TPM &);
+
+      void bar(double,const PHM &);
 
    private:
 
