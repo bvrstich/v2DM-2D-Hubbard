@@ -1,12 +1,13 @@
 /**
  * @mainpage 
- * This is an implementation of the dual-only potential reduction method
- * for optimizing the second-order density matrix using the P Q G T1 and T2' N-representability conditions for the special
- * case of the 2-dimensional Hubbard model with periodic boundary condition.
- * Spin and translational invariance have been implemented
- * At compile time you can decide which condtions will be active compile with make PQ, PQG, PQGT1, PQGT2' or PQGT=(for all conditions).
+ * This is an implementation of a primal dual interior point method
+ * for optimizing the second order density matrix using the P Q G T1 and T2 N-representability conditions for the special
+ * case of the 1 dimensional Hubbard model with periodic boundary condition, which means that all the symmetries for this case have been 
+ * implemented.
+ * The method used is a path following algorithm with predictor corrector steps.
+ * At compile time you can decide which condtions will be active compile with make PQ, PQG, PQGT1, PQGT2 or PQGT=(for all conditions).
  * @author Brecht Verstichel
- * @date 17-09-2012
+ * @date 10-05-2010
  */
 #include <iostream>
 #include <fstream>
@@ -20,14 +21,15 @@ using std::ofstream;
 #include "include.h"
 
 /**
+ * 
  * In the main the actual program is run.\n 
- * We start from the unity density matrix normed on the particle number and minimize the 
- * ojective function:\n\n
- * Tr (Gamma H) - t * ln(det P(Gamma)) \n\n
- * Once the minimum is found the parameter t is reduced and a new search is initiated,
- * this goes on until convergence is reached.\n
- * The potential is minimized using the Newton-Raphson method and the resulting linear system
- * is solved via the linear conjugate gradient method.
+ * Part 1: An easy initial point is taken and then centered to the required precision (flag == 0)\n
+ * Part 2: When the primal dual point is sufficiently centered steps are taken to reduce the
+ * primal dual gap and take a large step in that direction (predictor) (flag == 1)\n
+ * After each step a correcting step (flag == 2) is taken that brings the primal dual point closer to
+ * the central path.\n
+ * Part 3: When the primal dual gap is smaller that the required accuracy exit the while. (flag == 3)\n
+ * For more information on the actual method, see primal_dual.pdf
  */
 int main(int argc,char *argv[]){
 
@@ -59,72 +61,137 @@ int main(int argc,char *argv[]){
    PPHM::init();
 #endif
 
+   //hamiltoniaan
    TPM ham;
    ham.hubbard(U);
 
-   TPM rdm;
-   rdm.unit();
+   TPM ham_copy(ham);
 
-   TPM backup_rdm(rdm);
+   //only traceless hamiltonian needed in program.
+   ham.proj_Tr();
 
-   double t = 1.0;
-   double tolerance = 1.0e-15;
+   //primal
+   SUP X;
 
-   int n = 2*L*L*(2*L*L  - 1) + 4*L*L*L*L;
+   //dual
+   SUP Z;
 
-   //outer iteration: scaling of the potential barrier
-   while(t * n > 1.0e-5){
+   //Lagrange multiplier
+   SUP V;
 
-      cout << n*t << "\t" << rdm.trace() << "\t" << rdm.ddot(ham) << "\t";
+   //just dubya
+   SUP W;
 
-      int nr_cg_iter = 0;
-      int nr_newton_iter = 0;
+   SUP u_0;
 
-      double convergence = 1.0;
+   //little help
+   TPM hulp;
 
-      //inner iteration: 
-      //Newton's method for finding the minimum of the current potential
-      while(convergence > tolerance){
+   u_0.gI().unit();
 
-         ++nr_newton_iter;
+   u_0.fill();
 
-         SUP Z;
+   X = 0.0;
+   Z = 0.0;
 
-         Z.fill(rdm);
+   //what does this do?
+   double sigma = 1.0;
 
-         Z.invert();
+   double tolerance = 1.0e-5;
 
-         //eerst -gradient aanmaken:
-         TPM grad;
-         grad.constr_grad(t,ham,Z);
+   double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
-         //dit wordt de stap:
-         TPM delta;
+   double mazzy = 1.6;
 
-         //los het hessiaan stelsel op:
-         nr_cg_iter += delta.solve(t,Z,grad);
+   int iter;
+   int max_iter = 1;
 
-         //line search
-         double a = delta.line_search(t,Z,ham);
+   int tot_iter;
 
-         //rdm += a*delta;
-         rdm.daxpy(a,delta);
+   while(D_conv > tolerance || P_conv > tolerance || fabs(convergence) > tolerance){
 
-         convergence = a*a*delta.ddot(delta);
+      D_conv = 1.0;
 
-      }
+      iter = 0;
 
-      cout << nr_newton_iter << "\t" << nr_cg_iter << endl;
+      while(D_conv > tolerance && iter <= max_iter){
 
-      t /= 1.5;
+         tot_iter++;
+
+         ++iter;
+
+         //solve system
+         SUP B(Z);
+
+         B -= u_0;
+
+         B.daxpy(mazzy/sigma,X);
+
+         TPM b;
+
+         b.collaps(1,B);
+
+         b.daxpy(-mazzy/sigma,ham);
+
+         hulp.S(-1,b);
+
+         //hulp is the matrix containing the gamma_i's
+         hulp.proj_Tr();
+
+         //construct W
+         W.fill(hulp);
+
+         W += u_0;
+
+         W.daxpy(-1.0/sigma,X);
+
+         //update Z and V with eigenvalue decomposition:
+         W.sep_pm(Z,V);
+
+         V.dscal(-sigma);
+
+         //check infeasibility of the dual problem:
+         TPM v;
+
+         v.collaps(1,V);
+
+         v -= ham;
+
+         D_conv = sqrt(v.ddot(v));
+
+     }
+
+      //update primal:
+      X = V;
+
+      //check primal feasibility (W is a helping variable now)
+      W.fill(hulp);
+
+      W += u_0;
+
+      W -= Z;
+
+      P_conv = sqrt(W.ddot(W));
+
+      convergence = Z.gI().ddot(ham) + X.ddot(u_0);
+
+      cout << P_conv << "\t" << D_conv << "\t" << sigma << "\t" << convergence << "\t" << Z.gI().ddot(ham_copy) << endl;
+
+      if(D_conv < P_conv)
+         sigma *= 1.01;
+      else
+         sigma /= 1.01;
 
    }
 
    cout << endl;
+   cout << "Energy: " << ham_copy.ddot(Z.gI()) << endl;
+   cout << "pd gap: " << Z.ddot(X) << endl;
+   cout << "dual conv: " << D_conv << endl;
+   cout << "primal conv: " << P_conv << endl;
 
-   cout << "Final Energy:\t" << ham.ddot(rdm) << endl;
    cout << endl;
-   cout << "Final Spin:\t" << rdm.spin() << endl;
+   cout << tot_iter << endl;
 
 #ifdef __T2_CON
    PPHM::clear();
@@ -139,8 +206,6 @@ int main(int argc,char *argv[]){
 #endif
 
    TPM::clear();
-
-   Hamiltonian::clear();
 
    Tools::clear();
 

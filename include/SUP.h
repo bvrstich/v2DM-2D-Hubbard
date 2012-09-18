@@ -90,7 +90,7 @@ class SUP{
       SUP &operator=(const SUP &);
 
       //overload equality operator
-      SUP &operator=(double &);
+      SUP &operator=(double);
 
       double ddot(const SUP &) const;
 
@@ -139,6 +139,8 @@ class SUP{
 
       const PPHM &gT2() const;
 #endif
+
+      void sep_pm(SUP &,SUP &);
 
    private:
 

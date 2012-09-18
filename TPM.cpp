@@ -18,6 +18,9 @@ int ***TPM::s2t;
 int **TPM::block_char;
 int ***TPM::char_block;
 
+double TPM::Sa = 1;
+double TPM::Sc = 0;
+
 /**
  * static function that initializes the static variables
  */
@@ -127,6 +130,39 @@ void TPM::init(){
          ++block;
 
       }
+
+   init_overlap();
+
+}
+
+/**
+ * initialize the overlapmatrix parameters
+ */
+void TPM::init_overlap(){
+
+#ifdef __Q_CON
+   Sa += 1.0;
+   Sc += (2.0*Tools::gN() - Tools::gM())/((Tools::gN() - 1.0)*(Tools::gN() - 1.0));
+#endif
+
+#ifdef __G_CON
+   Sa += 4.0;
+   Sc += (2.0*Tools::gN() - Tools::gM() - 2.0)/((Tools::gN() - 1.0)*(Tools::gN() - 1.0));
+#endif
+
+#ifdef __T1_CON
+   Sa += Tools::gM() - 4.0;
+   Sc -= (Tools::gM()*Tools::gM() + 2.0*Tools::gN()*Tools::gN() - 4.0*Tools::gM()*Tools::gN() - Tools::gM() + 8.0*Tools::gN() - 4.0)
+   
+      /( 2.0*(Tools::gN() - 1.0)*(Tools::gN() - 1.0) );
+#endif
+
+#ifdef __T2_CON
+   Sa += 5.0*Tools::gM() - 4.0;
+   Sc += (2.0*Tools::gN()*Tools::gN() + (Tools::gM() - 2.0)*(4.0*Tools::gN() - 3.0) - Tools::gM()*Tools::gM() - 2.0)
+   
+      /(2.0*(Tools::gN() - 1.0)*(Tools::gN() - 1.0));
+#endif
 
 }
 
@@ -567,212 +603,6 @@ void TPM::set_S_2(){
 }
 
 /**
- * Construct the right hand side of the Newton equation for the determination of the search direction, 
- * the gradient of the potential:
- * @param t scaling factor of the potential
- * @param ham Hamiltonian of the current problem
- * @param Z SUP matrix containing the inverse of the constraint matrices (carrier space matrices).
- */
-void TPM::constr_grad(double t,const TPM &ham,const SUP &Z){
-
-   this->collaps(0,Z);
-
-   this->dscal(t);
-
-   *this -= ham;
-
-   this->proj_Tr();
-
-}
-
-/**
- * solve the Tools::gN()ewton equations for the determination of the search direction,
- * @param t scaling factor of the potential
- * @param Z SUP matrix containing the inverse of the constraint matrices (carrier space matrices).
- * @param b right hand side (the gradient constructed int TPM::constr_grad)
- * @return nr of iterations needed to converge to the desired accuracy
- */
-int TPM::solve(double t,const SUP &Z,TPM &b){
-
-   int iter = 0;
-
-   //delta = 0
-   *this = 0;
-
-   //residu:
-   TPM r(b);
-
-   //norm van het residu
-   double rr = r.ddot(r);
-
-   //enkele variabelen
-   double rr_old,ward;
-
-   TPM Hb;
-
-   while(rr > 1.0e-10){ 
-
-      Hb.H(t,b,Z);
-
-      ward = rr/b.ddot(Hb);
-
-      //delta += ward*b
-      this->daxpy(ward,b);
-
-      //r -= ward*Hb
-      r.daxpy(-ward,Hb);
-
-      //nieuwe variabelen berekenen en oude overdragen
-      rr_old = rr;
-      rr = r.ddot(r);
-
-      //nieuwe b nog:
-      b.dscal(rr/rr_old);
-
-      b += r;
-
-      ++iter;
-
-   }
-
-   return iter;
-
-}
-
-/**
- * The hessian-map of the Tools::gN()ewton system:
- * @param t potential scaling factor
- * @param b the TPM on which the hamiltonian will work, the image will be put in (*this)
- * @param Z the SUP matrix containing the constraints, (can be seen as the metric).
- */
-void TPM::H(double t,const TPM &b,const SUP &Z){
-
-   this->L_map(Z.gI(),b);
-
-#ifdef __Q_CON
-   TPM hulp;
-
-   //maak Q(b)
-   TPM Q_b;
-   Q_b.Q(1,b);
-
-   //stop Q(rdm)^{-1}Q(b)Q(rdm)^{-1} in hulp
-   hulp.L_map(Z.gQ(),Q_b);
-
-   //maak Q(hulp) en stop in Q_b
-   Q_b.Q(1,hulp);
-
-   //en tel op bij this
-   *this += Q_b;
-#endif
-
-#ifdef __G_CON
-   //hulpje voor het PHM stuk
-   PHM hulp_ph;
-   PHM G_b;
-
-   //stop G(b) in G_b
-   G_b.G(b);
-
-   //bereken G(rdm)^{-1}G(b)G(rdm)^{-1} en stop in hulp_ph
-   hulp_ph.L_map(Z.gG(),G_b);
-
-   //tenslotte nog de antisymmetrische G hierop:
-   hulp.G(hulp_ph);
-
-   //en optellen bij this
-   *this += hulp;
-#endif
-
-#ifdef __T1_CON
-   //hulpjes voor het DPM stuk
-   DPM hulp_dp;
-   DPM T1_b;
-
-   //stop T1(b) in T1_b
-   T1_b.T(b);
-
-   hulp_dp.L_map(Z.gT1(),T1_b);
-
-   hulp.T(hulp_dp);
-
-   *this += hulp;
-#endif
-
-#ifdef __T2_CON
-   PPHM hulp_pph;
-   PPHM T2_b;
-
-   T2_b.T(b);
-
-   hulp_pph.L_map(Z.gT2(),T2_b);
-
-   hulp.T(hulp_pph);
-
-   *this +=hulp;
-#endif
-
-   //nog schalen met t:
-   this->dscal(t);
-
-   //en projecteren op spoorloze ruimte
-   this->proj_Tr();
-
-}
-
-/**
- * perform a line search what step size in along the Tools::gN()ewton direction is ideal.
- * @param t potential scaling factor
- * @param Z SUP matrix containing the inverse of the constraints (carrier space matrices)
- * @param ham Hamiltonian of the problem
- * @return the steplength
- */
-double TPM::line_search(double t,SUP &Z,const TPM &ham){
-
-   double tolerance = 1.0e-5*t;
-
-   if(tolerance < 1.0e-12)
-      tolerance = 1.0e-12;
-
-   //neem de wortel uit P
-   Z.sqrt(1);
-
-   //maak eerst een SUP van delta
-   SUP S_delta;
-
-   S_delta.fill(*this);
-
-   //hulpje om dingskes in te steken:
-   SUP hulp;
-
-   hulp.L_map(Z,S_delta);
-
-   EIG eigen(hulp);
-
-   double a = 0;
-
-   double b = -1.0/eigen.min();
-
-   double c(0);
-
-   double ham_delta = ham.ddot(*this);
-
-   while(b - a > tolerance){
-
-      c = (b + a)/2.0;
-
-      if( (ham_delta - t*eigen.lsfunc(c)) < 0.0)
-         a = c;
-      else
-         b = c;
-
-   }
-
-   return c;
-
-}
-
-/**
  * The G down map, maps a PHM object onto a TPM object using the G map.
  * @param phm input PHM
  */
@@ -1061,5 +891,19 @@ void TPM::bar(const PPHM &pphm){
    }
 
    this->symmetrize();
+
+}
+
+/**
+ * ( Overlapmatrix of the U-basis ) - map, maps a TPM onto a different TPM, this map is actually a Q-like map
+ * for which the paramaters a,b and c are calculated in primal_dual.pdf. Since it is a Q-like map the inverse
+ * can be taken as well.
+ * @param option = 1 direct overlapmatrix-map is used , = -1 inverse overlapmatrix map is used
+ * @param tpm_d the input TPM
+ */
+
+void TPM::S(int option,const TPM &tpm_d){
+
+   this->Q(option,Sa,0.0,Sc,tpm_d);
 
 }

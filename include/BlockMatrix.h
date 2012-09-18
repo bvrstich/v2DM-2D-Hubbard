@@ -95,6 +95,8 @@ class BlockMatrix{
 
       void out(const char *) const;
 
+      void sep_pm(BlockMatrix &,BlockMatrix &);
+
    private:
 
       //!pointer to Matrix objects, will contain the different blocks
