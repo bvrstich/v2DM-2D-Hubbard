@@ -114,7 +114,9 @@ class EIG{
 
       double max() const;
 
-      double lsfunc(double) const;
+      double center_dev() const;
+
+      double centerpot(double,const EIG &,double,double) const;
 
    private:
 

@@ -139,6 +139,26 @@ class SUP{
 
       const PPHM &gT2() const;
 #endif
+      
+      void init_S();
+
+      void init_Z(double,const TPM &,const SUP &);
+
+      double center_dev(const SUP &) const;
+
+      void D(const SUP &,const SUP &);
+
+      void proj_C();
+
+      int solve(SUP &,const SUP &);
+
+      void H(const SUP &,const SUP &);
+      
+      double line_search(const SUP &,const SUP &,const SUP &,double) const;
+
+      void proj_C(const TPM &);
+
+      void proj_U();
 
    private:
 

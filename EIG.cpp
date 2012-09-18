@@ -331,28 +331,70 @@ double EIG::max() const{
 }
 
 /**
- * @param alpha step length along the Newton direction
- * @return The line search function, gradient of the potential in the Newton direction as a function of the step length alpha
+ * @return The deviation of the central path as calculated with the logarithmic barrierfunction, the EIG object is calculated
+ * in SUP::center_dev.
  */
-double EIG::lsfunc(double alpha) const{
+double EIG::center_dev() const{
 
-   double ward = vI->lsfunc(alpha);
+   double sum = vI->sum();
+   double log_product = vI->log_product();
 
 #ifdef __Q_CON
-   ward += vQ->lsfunc(alpha);
+   sum += vQ->sum();
+   log_product += vQ->log_product();
 #endif
 
 #ifdef __G_CON
-   ward += vG->lsfunc(alpha);
+   sum += vG->sum();
+   log_product += vG->log_product();
 #endif
 
 #ifdef __T1_CON
-   ward += vT1->lsfunc(alpha);
+   sum += vT1->sum();
+   log_product += vT1->log_product();
 #endif
 
 #ifdef __T2_CON
-   ward += vT2->lsfunc(alpha);
+   sum += vT2->sum();
+   log_product += vT2->log_product();
+#endif
+
+   return Tools::gdim()*log(sum/(double)Tools::gdim()) - log_product;
+
+}
+
+/**
+ * @return the deviation of the central path measured trough the logarithmic potential barrier (see primal_dual.pdf), when you take a stepsize alpha from
+ * the point (S,Z) in the primal dual newton direction (DS,DZ),
+ * for which you have calculated the generalized eigenvalues eigen_S and eigen_Z in SUP::line_search.
+ * (*this) = eigen_S --> generalized eigenvalues for the DS step
+ * @param alpha the stepsize
+ * @param eigen_Z --> generalized eigenvalues for the DS step
+ * @param c_S = Tr (DS Z)/Tr (SZ): parameter calculated in SUP::line_search
+ * @param c_Z = Tr (S DZ)/Tr (SZ): parameter calculated in SUP::line_search
+ */
+double EIG::centerpot(double alpha,const EIG &eigen_Z,double c_S,double c_Z) const{
+
+   double ward = Tools::gdim()*log(1.0 + alpha*(c_S + c_Z));
+
+   ward -= vI->centerpot(alpha) + (eigen_Z.gvI()).centerpot(alpha);
+
+#ifdef __Q_CON
+   ward -= vQ->centerpot(alpha) + (eigen_Z.gvQ()).centerpot(alpha);
+#endif
+
+#ifdef __G_CON
+   ward -= vG->centerpot(alpha) + (eigen_Z.gvG()).centerpot(alpha);
+#endif
+
+#ifdef __T1_CON
+   ward -= vT1->centerpot(alpha) + (eigen_Z.gvT1()).centerpot(alpha);
+#endif
+
+#ifdef __T2_CON
+   ward -= vT2->centerpot(alpha) + (eigen_Z.gvT2()).centerpot(alpha);
 #endif
 
    return ward;
+
 }

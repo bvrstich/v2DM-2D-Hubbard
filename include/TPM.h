@@ -80,14 +80,6 @@ class TPM : public BlockMatrix {
 
       void set_S_2();
 
-      void constr_grad(double,const TPM &,const SUP &);
-
-      int solve(double, const SUP &,TPM &);
-
-      void H(double t,const TPM &,const SUP &);
-
-      double line_search(double,SUP &,const TPM &);
-
       void G(const PHM &);
 
       void bar(const DPM &);
@@ -97,6 +89,14 @@ class TPM : public BlockMatrix {
       void T(const PPHM &);
 
       void bar(const PPHM &);
+
+      int solve(TPM &,const SUP &);
+
+      void H(const TPM &,const SUP &);
+
+      void S(int,const TPM &);
+
+      static void init_overlap();
 
       static void init();
 
@@ -115,6 +115,9 @@ class TPM : public BlockMatrix {
 
       //!static list that returns the blockindex when given the S, K_x and K_y.
       static int ***char_block;
+
+      //!overlapmatrix parameters
+      static double Sa,Sc;
 
 };
 

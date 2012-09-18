@@ -14,6 +14,7 @@ double *Tools::x9j;
 int Tools::L;
 int Tools::M;
 int Tools::N;
+int Tools::dim;
 
 /**
  * initialize and allocate the static variables
@@ -43,6 +44,25 @@ void Tools::init(int L_in,int N_in){
          for(int S_ab = 0;S_ab < 2;++S_ab)
             for(int S_cd = 0;S_cd < 2;++S_cd)
                x9j[8*S + 4*Z + 2*S_ab + S_cd] = gsl_sf_coupling_9j(1,1,2*Z,2*S + 1,2*S_ab,1,2*S_cd,1,1);
+
+   //and set the full dimension of the constraint space
+   dim = Tools::gM()*(Tools::gM() - 1)/2;
+
+#ifdef __Q_CON
+   dim += Tools::gM()*(Tools::gM() - 1)/2;
+#endif
+
+#ifdef __G_CON
+   dim += Tools::gM() * Tools::gM();
+#endif
+
+#ifdef __T1_CON
+   dim += Tools::gM()*(Tools::gM() - 1)*(Tools::gM() - 2)/6;
+#endif
+
+#ifdef __T2_CON
+   dim += Tools::gM()*Tools::gM()*(Tools::gM() - 1)/2 + Tools::gM();
+#endif
 
 }
 
@@ -109,5 +129,14 @@ int Tools::gM(){
 int Tools::gN(){
 
    return N;
+
+}
+
+/**
+ * @return the total dimension of full constraint space
+ */
+int Tools::gdim(){
+
+   return dim;
 
 }

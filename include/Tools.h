@@ -29,6 +29,8 @@ class Tools{
 
       static int gN();
 
+      static int gdim();
+
    private:
 
       //!nr of sites
@@ -39,6 +41,9 @@ class Tools{
 
       //!nr of orbitals
       static int M;
+
+      //!total dimension of the full constraint space
+      static int dim;
 
       static double *x6j;
 
