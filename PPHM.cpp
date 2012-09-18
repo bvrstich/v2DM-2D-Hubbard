@@ -217,7 +217,7 @@ PPHM::PPHM() : BlockMatrix(Tools::gM()) {
 
    //set the dimension of the blocks
    for(int B = 0;B < Tools::gL()*Tools::gL();++B)//S = 1/2
-      setMatrixDim(B,pph2s[B].size(),2);
+      setMatrixDim(B,pph2s[B].size() + 1,2);
 
    for(int B = Tools::gL()*Tools::gL();B < 2*Tools::gL()*Tools::gL();++B)//S = 3/2
       setMatrixDim(B,pph2s[B].size(),4);
@@ -273,18 +273,70 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
       output << pphm_p.gS(B) << "\t" << pphm_p.gK_x(B) << "\t" << pphm_p.gK_y(B) << "\t" << pphm_p.gdim(B) << "\t" << pphm_p.gdeg(B) << std::endl;
       output << std::endl;
 
-      for(int i = 0;i < pphm_p.gdim(B);++i)
-         for(int j = 0;j < pphm_p.gdim(B);++j){
+      if(pphm_p.gS(B) == 0){
 
-            output << i << "\t" << j << "\t|\t" << 
+         for(unsigned int i = 0;i < pphm_p.pph2s[B].size();++i){
+
+            for(unsigned int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+               output << i << "\t" << j << "\t|\t" << 
+
+                  pphm_p.pph2s[B][i][0] << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << 
+
+                  "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+                  << "\t" << pphm_p(B,i,j) << endl;
+
+            }
+
+            output << i << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << 
 
                pphm_p.pph2s[B][i][0] << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << 
 
-               "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+               "\t" << Hamiltonian::gxy_a(pphm_p.gK_x(B),pphm_p.gK_y(B)) << "\t" << pphm_p(B,i,pphm_p.pph2s[B].size()) << endl;
 
-               << "\t" << pphm_p(B,i,j) << endl;
+
 
          }
+
+         for(unsigned int j = 0;j < pphm_p.pph2s[B].size();++j){
+
+            output << pphm_p.pph2s[B].size() << "\t" << j << "\t|\t" << 
+
+               Hamiltonian::gxy_a(pphm_p.gK_x(B),pphm_p.gK_y(B)) <<
+
+               "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+               << "\t" << pphm_p(B,pphm_p.pph2s[B].size(),j) << endl;
+
+         }
+
+         output << pphm_p.pph2s[B].size() << "\t" << pphm_p.pph2s[B].size() << "\t|\t" << 
+
+            Hamiltonian::gxy_a(pphm_p.gK_x(B),pphm_p.gK_y(B)) << "\t" <<  Hamiltonian::gxy_a(pphm_p.gK_x(B),pphm_p.gK_y(B)) << "\t" <<     
+
+            pphm_p(B,pphm_p.pph2s[B].size(),pphm_p.pph2s[B].size()) << endl;
+
+      }
+      else{
+
+         for(int i = 0;i < pphm_p.gdim(B);++i){
+
+            for(int j = 0;j < pphm_p.gdim(B);++j){
+
+               output << i << "\t" << j << "\t|\t" << 
+
+                  pphm_p.pph2s[B][i][0] << "\t" << pphm_p.pph2s[B][i][1] << "\t" << pphm_p.pph2s[B][i][2] << "\t" << pphm_p.pph2s[B][i][3] << 
+
+                  "\t" << pphm_p.pph2s[B][j][0] << "\t" << pphm_p.pph2s[B][j][1] << "\t" << pphm_p.pph2s[B][j][2] << "\t" << pphm_p.pph2s[B][j][3] 
+
+                  << "\t" << pphm_p(B,i,j) << endl;
+
+            }
+
+         }
+
+      }
 
       output << endl;
 
@@ -295,7 +347,7 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
 }
 
 /**
- * access the elements of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
+ * access the elements of the pph part of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
  * @param S The pphm-spin index, when == 0 then access the block S = 1/2, for spinindex == 1 we access the S = 3/2.
  * @param S_ab The intermediate spinquantumnumber of a and b.
  * @param a first sp index that forms the pph row index i together with b, c and S_ab in block B
@@ -307,7 +359,7 @@ ostream &operator<<(ostream &output,const PPHM &pphm_p){
  * @param z third sp index that forms the pph column index j together with d, e and S_de in block B
  * @return the number on place PPHM(B,i,j) with the right phase.
  */
-double PPHM::operator()(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,int z) const {
+double PPHM::pph(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,int z) const {
 
    int K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%Tools::gL();
    int K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%Tools::gL();
@@ -332,6 +384,55 @@ double PPHM::operator()(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,in
       return 0;
 
    return phase_i*phase_j* (*this)(char_block[S][K_x][K_y],i,j);
+
+}
+
+/**
+ * access the elements of the w part of the matrix in sp mode, special symmetry and antisymmetry relations are automatically accounted for:\n\n
+ * Only the S=1/2 block has extra "prime" terms
+ * @param S_ab The intermediate spinquantumnumber of a and b.
+ * @param a first sp index that forms the pph row index i together with b, c and S_ab in block B
+ * @param b second sp index that forms the pph row index i together with a, c and S_ab in block B
+ * @param c third sp index that forms the pph row index i together with a, b and S_ab in block B
+ * @param d at the same time, momentum index of the block and sp index of the column
+ * @return the number on place PPHM(B,i,j) with the right phase.
+ */
+double PPHM::w(int S_ab,int a,int b,int c,int d) const {
+
+   int K_x = (Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) + Hamiltonian::ga_xy(c,0))%Tools::gL();
+   int K_y = (Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) + Hamiltonian::ga_xy(c,1))%Tools::gL();
+
+   //check the momentum
+   if( K_x != Hamiltonian::ga_xy(d,0) )
+      return 0;
+
+   if( K_y != Hamiltonian::ga_xy(d,1) )
+      return 0;
+
+   int B = char_block[0][K_x][K_y];
+
+   int i;
+
+   int phase_i = get_inco(B,S_ab,a,b,c,i);
+
+   if(phase_i == 0)
+      return 0;
+
+   return phase_i * (*this)(B,i,pph2s[B].size());
+
+}
+
+/**
+ * access the elements of the sp part of the matrix
+ * Only the S=1/2 block has extra "prime" terms
+ * @param k momentum index of the block and of the sp term
+ * @return the number on place PPHM(B,i,j) with the right phase.
+ */
+double PPHM::sp(int k) const {
+
+   int B = char_block[0][Hamiltonian::ga_xy(k,0)][Hamiltonian::ga_xy(k,1)];
+
+   return (*this)(B,pph2s[B].size(),pph2s[B].size());
 
 }
 
@@ -428,7 +529,12 @@ void PPHM::T(const TPM &tpm){
    //first the S = 1/2 blocks, these should be the most difficult ones.
    for(int B = 0;B < Tools::gL()*Tools::gL();++B){
 
-      for(int i = 0;i < gdim(B);++i){
+      int K_x = block_char[B][1];
+      int K_y = block_char[B][2];
+
+      int K = Hamiltonian::gxy_a(K_x,K_y);//momentum index of the block
+
+      for(unsigned int i = 0;i < pph2s[B].size();++i){
 
          S_ab = pph2s[B][i][0];
 
@@ -445,7 +551,7 @@ void PPHM::T(const TPM &tpm){
          if(a == b)
             norm_ab /= std::sqrt(2.0);
 
-         for(int j = i;j < gdim(B);++j){
+         for(unsigned int j = i;j < pph2s[B].size();++j){
 
             S_de = pph2s[B][j][0];
 
@@ -554,11 +660,20 @@ void PPHM::T(const TPM &tpm){
 
             }
 
-         }
+         }//j
 
-      }
+         //w part of the map
+         if(K == c)
+            (*this)(B,i,pph2s[B].size()) = - std::sqrt(2.0 * S_ab + 1.0) * sign_ab * tpm(S_ab,a,b,K,c);
+         else
+            (*this)(B,i,pph2s[B].size()) = - std::sqrt(S_ab + 0.5) * sign_ab * tpm(S_ab,a,b,K,c);
 
-   }
+      }//i
+
+      //sp part of the map
+      (*this)(B,pph2s[B].size(),pph2s[B].size()) = spm[K];
+
+   }//B
 
    //the easier S = 3/2 part:
    for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){

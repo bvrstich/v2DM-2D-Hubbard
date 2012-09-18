@@ -338,7 +338,7 @@ void PHM::bar(const PPHM &pphm){
 
                   for(int e = 0;e < Tools::gL() * Tools::gL();++e){
 
-                     hard = ward * pphm(0,S_ab,e,a,b,S_de,e,c,d);
+                     hard = ward * pphm.pph(0,S_ab,e,a,b,S_de,e,c,d);
 
                      //norms
                      if(e == a)
@@ -357,7 +357,7 @@ void PHM::bar(const PPHM &pphm){
             if(S == 1){
 
                for(int e = 0;e < Tools::gL() * Tools::gL();++e)
-                  (*this)(B,i,j) += 4.0/3.0 * pphm(1,1,e,a,b,1,e,c,d);
+                  (*this)(B,i,j) += 4.0/3.0 * pphm.pph(1,1,e,a,b,1,e,c,d);
 
             }
 

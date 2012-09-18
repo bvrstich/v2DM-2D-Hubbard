@@ -103,12 +103,12 @@ void SPM::bar(double scale,const PPHM &pphm){
          for(int a = 0;a < Tools::gL()*Tools::gL();++a){
 
             for(int b = 0;b < a;++b)//b < a
-               (*this)[c] += pphm(0,S_ab,a,b,c,S_ab,a,b,c);
+               (*this)[c] += pphm.pph(0,S_ab,a,b,c,S_ab,a,b,c);
 
-            (*this)[c] += 2.0 * pphm(0,S_ab,a,a,c,S_ab,a,a,c);
+            (*this)[c] += 2.0 * pphm.pph(0,S_ab,a,a,c,S_ab,a,a,c);
 
             for(int b = a + 1;b < Tools::gL()*Tools::gL();++b)//b > a
-               (*this)[c] += pphm(0,S_ab,a,b,c,S_ab,a,b,c);
+               (*this)[c] += pphm.pph(0,S_ab,a,b,c,S_ab,a,b,c);
 
          }
 
@@ -117,7 +117,7 @@ void SPM::bar(double scale,const PPHM &pphm){
       //then S = 3/2 part:
       for(int a = 0;a < Tools::gL()*Tools::gL();++a)
          for(int b = 0;b < Tools::gL()*Tools::gL();++b)
-            (*this)[c] += 2.0 * pphm(1,1,a,b,c,1,a,b,c);
+            (*this)[c] += 2.0 * pphm.pph(1,1,a,b,c,1,a,b,c);
 
       //scaling
       (*this)[c] *= scale;

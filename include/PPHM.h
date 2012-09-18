@@ -12,7 +12,7 @@ using std::ostream;
  * @author Brecht Verstichel
  * @date 08-03-2011\n\n
  * This class, PPHM, is a class written for spinsymmetrical, translationally invaraint two-particle-one-hole matrices. 
- * It is written specially for the T_2 condition. 
+ * It is written specially for the T_2' condition. 
  * It inherits all the functions from its mother class BlockMatrix, some special member functions and two lists that give
  * the relationship between the pph (two-particle one hole) and the sp basis. This matrix has M blocks, M/2 for S = 1/2 block with degeneracy 2
  * and M/2 for S = 3/2 block with degeneracy 4.
@@ -43,7 +43,11 @@ class PPHM : public BlockMatrix {
 
       using BlockMatrix::operator();
 
-      double operator()(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,int z) const;
+      double pph(int S,int S_ab,int a,int b,int c,int S_de,int d,int e,int z) const;
+
+      double w(int S,int a,int b,int c,int k) const;
+
+      double sp(int k) const;
 
       int get_inco(int B,int S_ab,int a,int b,int c,int &i) const;
 

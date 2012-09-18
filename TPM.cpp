@@ -951,7 +951,7 @@ void TPM::T(const PPHM &pphm){
    int a_,b_,c_,d_;
    int sign;
 
-   double norm;
+   double norm_ab,norm_cd;
 
    int S;
 
@@ -979,28 +979,31 @@ void TPM::T(const PPHM &pphm){
             d_ = Hamiltonian::bar(d);
 
             //determine the norm for the basisset
-            norm = 1.0;
+            norm_ab = 1.0;
+            norm_cd = 1.0;
 
             if(S == 0){
 
                if(a == b)
-                  norm /= std::sqrt(2.0);
+                  norm_ab /= std::sqrt(2.0);
 
                if(c == d)
-                  norm /= std::sqrt(2.0);
+                  norm_cd /= std::sqrt(2.0);
 
             }
 
             //first the tp part
-            (*this)(B,i,j) = tpm(B,i,j);
+            (*this)(B,i,j) = tpm(B,i,j) - std::sqrt(1.0/(S + 0.5)) * ( norm_cd * (pphm.w(S,a,b,c_,d) + sign * pphm.w(S,a,b,d_,c))
+            
+                  + norm_ab * (pphm.w(S,c,d,a_,b) + sign * pphm.w(S,c,d,b_,a)) );
 
-            //sp part is diagonal for translationaly invariance
+            //sp part is diagonal for translational invariance
             if(i == j)
-               (*this)(B,i,j) += spm[a_] + spm[b_];
+               (*this)(B,i,j) += spm[a_] + spm[b_] + ( pphm.sp(a) + pphm.sp(b) )/(Tools::gN() - 1.0);
 
             for(int Z = 0;Z < 2;++Z){
 
-               (*this)(B,i,j) -= norm * (2.0 * Z + 1.0) * Tools::g6j(0,0,S,Z) * ( phm(Z,d,a_,b,c_) + sign * phm(Z,d,b_,a,c_) 
+               (*this)(B,i,j) -= norm_ab * norm_cd * (2.0 * Z + 1.0) * Tools::g6j(0,0,S,Z) * ( phm(Z,d,a_,b,c_) + sign * phm(Z,d,b_,a,c_) 
                
                      + sign * phm(Z,c,a_,b,d_) +  phm(Z,c,b_,a,d_) );
 
@@ -1047,7 +1050,7 @@ void TPM::bar(const PPHM &pphm){
                ward = (2.0*(S + 0.5) + 1.0)/(2.0*Z + 1.0);
 
                for(int e = 0;e < Tools::gL()*Tools::gL();++e)
-                  (*this)(B,i,j) += ward * pphm(S,Z,a,b,e,Z,c,d,e);
+                  (*this)(B,i,j) += ward * pphm.pph(S,Z,a,b,e,Z,c,d,e);
 
             }
 
