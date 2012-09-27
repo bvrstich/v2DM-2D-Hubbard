@@ -1,6 +1,6 @@
 /**
  * @mainpage 
- * This is an implementation of a primal dual interior point method
+ * This is an implementation of a boundary point method
  * for optimizing the second order density matrix using the P Q G T1 and T2 N-representability conditions for the special
  * case of the 1 dimensional Hubbard model with periodic boundary condition, which means that all the symmetries for this case have been 
  * implemented.
@@ -23,13 +23,7 @@ using std::ofstream;
 /**
  * 
  * In the main the actual program is run.\n 
- * Part 1: An easy initial point is taken and then centered to the required precision (flag == 0)\n
- * Part 2: When the primal dual point is sufficiently centered steps are taken to reduce the
- * primal dual gap and take a large step in that direction (predictor) (flag == 1)\n
- * After each step a correcting step (flag == 2) is taken that brings the primal dual point closer to
- * the central path.\n
- * Part 3: When the primal dual gap is smaller that the required accuracy exit the while. (flag == 3)\n
- * For more information on the actual method, see primal_dual.pdf
+ * a boundary point method
  */
 int main(int argc,char *argv[]){
 
@@ -97,7 +91,7 @@ int main(int argc,char *argv[]){
    //what does this do?
    double sigma = 1.0;
 
-   double tolerance = 1.0e-5;
+   double tolerance = 1.0e-7;
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
@@ -192,6 +186,12 @@ int main(int argc,char *argv[]){
 
    cout << endl;
    cout << tot_iter << endl;
+   cout << endl;
+
+   SPM spm;
+   spm.bar(1.0/(N - 1.0),Z.gI());
+
+   cout << spm;
 
 #ifdef __T2_CON
    PPHM::clear();

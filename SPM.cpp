@@ -27,7 +27,7 @@ SPM::~SPM(){ }
 ostream &operator<<(ostream &output,const SPM &spm_p){
 
    for(int a = 0;a < spm_p.gn();++a)
-      output << a << "\t" << spm_p[a] << endl;
+      output << a << "\t(" << Hamiltonian::ga_xy(a,0) << "," << Hamiltonian::ga_xy(a,1) << ")\t" << spm_p[a] << endl;
 
    return output;
 
