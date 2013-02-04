@@ -209,14 +209,40 @@ ostream &operator<<(ostream &output,const TPM &tpm_p){
 
       output << std::endl;
 
-      for(int i = 0;i < tpm_p.gdim(B);++i)
+      int a,b,c,d;
+
+      int ax,ay,bx,by,cx,cy,dx,dy;
+
+      for(int i = 0;i < tpm_p.gdim(B);++i){
+
+         a = tpm_p.t2s[B][i][0];
+         b = tpm_p.t2s[B][i][1];
+
+         ax = Hamiltonian::ga_xy(a,0);
+         ay = Hamiltonian::ga_xy(a,1);
+
+         bx = Hamiltonian::ga_xy(b,0);
+         by = Hamiltonian::ga_xy(b,1);
+
          for(int j = 0;j < tpm_p.gdim(B);++j){
 
-            output << i << "\t" << j << "\t|\t" << tpm_p.t2s[B][i][0] << "\t" << tpm_p.t2s[B][i][1]
+            c = tpm_p.t2s[B][j][0];
+            d = tpm_p.t2s[B][j][1];
 
-               << "\t" << tpm_p.t2s[B][j][0] << "\t" << tpm_p.t2s[B][j][1] << "\t" << tpm_p(B,i,j) << endl;
+            cx = Hamiltonian::ga_xy(c,0);
+            cy = Hamiltonian::ga_xy(c,1);
+
+            dx = Hamiltonian::ga_xy(d,0);
+            dy = Hamiltonian::ga_xy(d,1);
+
+            output << i << "\t" << j << "\t|\t" << a << "\t" << b << "\t;\t" << c << "\t" << d
+            
+               << "\t|\t(" << ax << "," << ay << ")\t(" << bx << "," << by << ")\t(" << cx << "," << cy << ")\t(" << dx << "," << dy << ")\t|\t"
+               
+               << tpm_p(B,i,j) << endl;
 
          }
+      }
 
       output << std::endl;
 
@@ -1061,5 +1087,49 @@ void TPM::bar(const PPHM &pphm){
    }
 
    this->symmetrize();
+
+}
+
+/**
+ * print the two-particle basis
+ */
+void TPM::print_basis() {
+
+   int S,K_x,K_y;
+
+   for(int B = 0;B < gnr();++B){
+
+      S = block_char[B][0];
+      K_x = block_char[B][1];
+      K_y = block_char[B][2];
+
+      cout << "S =\t" << S << "\tK_x =\t" << K_x << "\tK_y =\t" << K_y <<
+
+         "\tdimension =\t" << gdim(B) << "\tdegeneracy =\t" << gdeg(B) << std::endl;
+
+      cout << std::endl;
+
+      int a,b;
+
+      int ax,ay,bx,by;
+
+      for(int i = 0;i < gdim(B);++i){
+
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
+
+         ax = Hamiltonian::ga_xy(a,0);
+         ay = Hamiltonian::ga_xy(a,1);
+
+         bx = Hamiltonian::ga_xy(b,0);
+         by = Hamiltonian::ga_xy(b,1);
+
+         cout << a << "\t" << b << "\t|\t"  << "(" << ax << "," << ay << ")\t(" << bx << "," << by << ")" << endl;
+
+      }
+
+      cout << endl;
+
+   }
 
 }
