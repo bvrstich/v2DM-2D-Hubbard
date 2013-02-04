@@ -62,6 +62,8 @@ class DPM : public BlockMatrix {
       //maak een DPM van een TPM via de T1 conditie
       void T(const TPM &);
 
+      void T(int,const TPM &);
+
       //maak een DPM van een TPM via de hat functie
       void hat(const TPM &);
 

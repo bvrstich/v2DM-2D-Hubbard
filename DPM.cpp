@@ -858,11 +858,510 @@ void DPM::T(double A,double B,double C,const TPM &tpm) {
 
 }
 
+void DPM::T(int option,const TPM &tpm){
+
+   double A = 1.0;
+   double B = 1.0/(Tools::gN()*(Tools::gN() - 1.0));
+   double C = 1.0/(Tools::gN() - 1.0);
+
+   if(option == 1){
+
+      //make sp matrix out of tpm
+      SPM spm;
+      spm.bar(C,tpm);
+
+      double ward = 2.0*B*tpm.trace();
+
+      int a,b,c,d,e,z;
+      int S_ab,S_de;
+
+      int sign_ab,sign_de;
+
+      double norm_ab,norm_de;
+
+      double hard;
+
+      //start with the S = 1/2 blocks, these are the most difficult:
+      for(int B = 0;B < Tools::gL()*Tools::gL();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            S_ab = dp2s[B][i][0];
+
+            a = dp2s[B][i][1];
+            b = dp2s[B][i][2];
+            c = dp2s[B][i][3];
+
+            sign_ab = 1 - 2*S_ab;
+
+            norm_ab = 1.0;
+
+            if(a == b)
+               norm_ab /= std::sqrt(2.0);
+
+            for(int j = i;j < gdim(B);++j){
+
+               S_de = dp2s[B][j][0];
+
+               d = dp2s[B][j][1];
+               e = dp2s[B][j][2];
+               z = dp2s[B][j][3];
+
+               sign_de = 1 - 2*S_de;
+
+               norm_de = 1.0;
+
+               if(d == e)
+                  norm_de /= std::sqrt(2.0);
+
+               hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * Tools::g6j(0,0,S_ab,S_de);
+
+               //init
+               (*this)(B,i,j) = 0.0;
+
+               //the np + sp part
+               if(i == j)
+                  (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
+
+               //other parts are a bit more difficult.
+
+               //tp(1)
+               if(c == z)
+                  if(S_ab == S_de)
+                     (*this)(B,i,j) += A * tpm(S_ab,a,b,d,e);
+
+               //tp(2)
+               if(b == z){
+
+                  if(a == c)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,a,c,d,e);
+                  else
+                     (*this)(B,i,j) += A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,a,c,d,e);
+
+               }
+
+               //tp(3)
+               if(a == z){
+
+                  if(b == c)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_de * hard * tpm(S_de,b,c,d,e);
+                  else
+                     (*this)(B,i,j) += A * norm_ab * sign_de * hard * tpm(S_de,b,c,d,e);
+
+               }
+
+               //tp(4)
+               if(c == e){
+
+                  if(d == z)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,a,b,d,z);
+                  else
+                     (*this)(B,i,j) += A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,a,b,d,z);
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,a,c,d,z);
+
+                  //correct for norms of the tpm
+                  if(a == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(d == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * hulp;
+
+               }
+
+               //tp(6)
+               if(a == e){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,b,c,d,z);
+
+                  if(b == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(d == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+               //tp(7)
+               if(c == d){
+
+                  if(e == z)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * hard * tpm(S_ab,a,b,e,z);
+                  else
+                     (*this)(B,i,j) += A * norm_de * sign_ab * hard * tpm(S_ab,a,b,e,z);
+
+               }
+
+               //tp(8)
+               if(b == d){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,a,c,e,z);
+
+                  if(a == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(e == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+               //tp(9)
+               if(a == d){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,b,c,e,z);
+
+                  if(b == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(e == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+            }
+         }
+
+      }
+
+      //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
+      for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = dp2s[B][i][1];
+            b = dp2s[B][i][2];
+            c = dp2s[B][i][3];
+
+            for(int j = i;j < gdim(B);++j){
+
+               d = dp2s[B][j][1];
+               e = dp2s[B][j][2];
+               z = dp2s[B][j][3];
+
+               (*this)(B,i,j) = 0.0;
+
+               //np + sp part:
+               if(i == j)
+                  (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
+
+               //tp(1)
+               if(c == z)
+                  (*this)(B,i,j) += A * tpm(1,a,b,d,e);
+
+               //tp(2)
+               if(b == z)
+                  (*this)(B,i,j) -= A * tpm(1,a,c,d,e);
+
+               //tp(4)
+               if(c == e)
+                  (*this)(B,i,j) -= A * tpm(1,a,b,d,z);
+
+               //tp(5)
+               if(b == e)
+                  (*this)(B,i,j) += A * tpm(1,a,c,d,z);
+
+               //tp(7)
+               if(c == d)
+                  (*this)(B,i,j) += A * tpm(1,a,b,e,z);
+
+               //tp(8)
+               if(b == d)
+                  (*this)(B,i,j) -= A * tpm(1,a,c,e,z);
+
+               //tp(9)
+               if(a == d)
+                  (*this)(B,i,j) += A * tpm(1,b,c,e,z);
+
+            }
+         }
+
+      }
+
+      this->symmetrize();
+
+   }
+   else{
+
+      //make sp matrix out of tpm
+      SPM spm;
+      spm.bar(C,tpm);
+
+      double ward = 2.0*B*tpm.trace();
+
+      int a,b,c,d,e,z;
+      int S_ab,S_de;
+
+      int sign_ab,sign_de;
+
+      double norm_ab,norm_de;
+
+      double hard;
+
+      //start with the S = 1/2 blocks, these are the most difficult:
+      for(int B = 0;B < Tools::gL()*Tools::gL();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            S_ab = dp2s[B][i][0];
+
+            a = dp2s[B][i][1];
+            b = dp2s[B][i][2];
+            c = dp2s[B][i][3];
+
+            sign_ab = 1 - 2*S_ab;
+
+            norm_ab = 1.0;
+
+            if(a == b)
+               norm_ab /= std::sqrt(2.0);
+
+            for(int j = i;j < gdim(B);++j){
+
+               S_de = dp2s[B][j][0];
+
+               d = dp2s[B][j][1];
+               e = dp2s[B][j][2];
+               z = dp2s[B][j][3];
+
+               sign_de = 1 - 2*S_de;
+
+               norm_de = 1.0;
+
+               if(d == e)
+                  norm_de /= std::sqrt(2.0);
+
+               hard = std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * Tools::g6j(0,0,S_ab,S_de);
+
+               //init
+               (*this)(B,i,j) = 0.0;
+
+               //the np + sp part
+               if(i == j)
+                  (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
+
+               //other parts are a bit more difficult.
+
+               //tp(1)
+               if(c == z)
+                  if(S_ab == S_de)
+                     (*this)(B,i,j) += A * tpm(S_ab,a,b,d,e);
+
+               //tp(2)
+               if(b == z){
+
+                  if(a == c)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,a,c,d,e);
+                  else
+                     (*this)(B,i,j) += A * norm_ab * sign_ab * sign_de * hard * tpm(S_de,a,c,d,e);
+
+               }
+
+               //tp(3)
+               if(a == z){
+
+                  if(b == c)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_ab * sign_de * hard * tpm(S_de,b,c,d,e);
+                  else
+                     (*this)(B,i,j) += A * norm_ab * sign_de * hard * tpm(S_de,b,c,d,e);
+
+               }
+
+               //tp(4)
+               if(c == e){
+
+                  if(d == z)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,a,b,d,z);
+                  else
+                     (*this)(B,i,j) += A * norm_de * sign_ab * sign_de * hard * tpm(S_ab,a,b,d,z);
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,a,c,d,z);
+
+                  //correct for norms of the tpm
+                  if(a == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(d == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * norm_ab * norm_de * sign_ab * sign_de * std::sqrt( (2*S_ab + 1.0) * (2*S_de + 1.0) ) * hulp;
+
+               }
+
+               //tp(6)
+               if(a == e){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,b,c,d,z);
+
+                  if(b == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(d == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * sign_de * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+               //tp(7)
+               if(c == d){
+
+                  if(e == z)
+                     (*this)(B,i,j) += std::sqrt(2.0) * A * norm_de * sign_ab * hard * tpm(S_ab,a,b,e,z);
+                  else
+                     (*this)(B,i,j) += A * norm_de * sign_ab * hard * tpm(S_ab,a,b,e,z);
+
+               }
+
+               //tp(8)
+               if(b == d){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,a,c,e,z);
+
+                  if(a == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(e == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * sign_ab * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+               //tp(9)
+               if(a == d){
+
+                  double hulp = 0.0;
+
+                  //sum over intermediate spin
+                  for(int Z = 0;Z < 2;++Z)
+                     hulp += (2*Z + 1.0) * Tools::g6j(0,0,Z,S_ab) * Tools::g6j(0,0,Z,S_de) * tpm(Z,b,c,e,z);
+
+                  if(b == c)
+                     hulp *= std::sqrt(2.0);
+
+                  if(e == z)
+                     hulp *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += A * std::sqrt( (2*S_ab + 1) * (2*S_de + 1.0) ) * norm_ab * norm_de * hulp;
+
+               }
+
+            }
+         }
+
+      }
+
+      //then the S = 3/2 blocks, this should be easy, totally antisymmetrical 
+      for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = dp2s[B][i][1];
+            b = dp2s[B][i][2];
+            c = dp2s[B][i][3];
+
+            for(int j = i;j < gdim(B);++j){
+
+               d = dp2s[B][j][1];
+               e = dp2s[B][j][2];
+               z = dp2s[B][j][3];
+
+               (*this)(B,i,j) = 0.0;
+
+               //np + sp part:
+               if(i == j)
+                  (*this)(B,i,j) = ward - spm[a] - spm[b] - spm[c];
+
+               //tp(1)
+               if(c == z)
+                  (*this)(B,i,j) += A * tpm(1,a,b,d,e);
+
+               //tp(2)
+               if(b == z)
+                  (*this)(B,i,j) -= A * tpm(1,a,c,d,e);
+
+               //tp(4)
+               if(c == e)
+                  (*this)(B,i,j) -= A * tpm(1,a,b,d,z);
+
+               //tp(5)
+               if(b == e)
+                  (*this)(B,i,j) += A * tpm(1,a,c,d,z);
+
+               //tp(7)
+               if(c == d)
+                  (*this)(B,i,j) += A * tpm(1,a,b,e,z);
+
+               //tp(8)
+               if(b == d)
+                  (*this)(B,i,j) -= A * tpm(1,a,c,e,z);
+
+               //tp(9)
+               if(a == d)
+                  (*this)(B,i,j) += A * tpm(1,b,c,e,z);
+
+            }
+         }
+
+      }
+
+      this->symmetrize();
+
+   }
+
+
+}
+
 /**
  * The T1-map: maps a TPM object (tpm) on a DPM object (*this). 
  * @param tpm input TPM
  */
-
 void DPM::T(const TPM &tpm){
 
    double a = 1.0;

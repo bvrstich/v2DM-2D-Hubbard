@@ -327,3 +327,60 @@ void TPTPM::G(const PHM &phm ){
    delete [] gbasis2;
 
 }
+
+void TPTPM::T(const DPM &dpm ){
+
+   Basis basis;
+
+   DPM **tbasis1 = new DPM * [TPTPM::gn()];
+
+   for(int i = 0;i < TPTPM::gn();++i){
+
+      tbasis1[i] = new DPM();
+
+      tbasis1[i]->T(1,basis[i]);
+
+   }
+
+   DPM **tbasis2 = new DPM * [TPTPM::gn()];
+
+   for(int i = 0;i < TPTPM::gn();++i){
+
+      tbasis2[i] = new DPM();
+
+      tbasis2[i]->T(2,basis[i]);
+
+   }
+
+   DPM **lmap = new DPM * [TPTPM::gn()];
+
+   for(int i = 0;i < TPTPM::gn();++i){
+
+      lmap[i] = new DPM();
+
+      lmap[i]->L_map(dpm,*tbasis1[i]);
+
+   }
+
+   for(int i = 0;i < TPTPM::gn();++i){
+
+      for(int j = 0;j < TPTPM::gn();++j){
+
+         (*this)(i,j) =  lmap[i]->ddot(*tbasis2[j]);
+
+      }
+   }
+
+   for(int i = 0;i < TPTPM::gn();++i){
+
+      delete lmap[i];
+      delete tbasis1[i];
+      delete tbasis2[i];
+
+   }
+
+   delete [] lmap;
+   delete [] tbasis1;
+   delete [] tbasis2;
+
+}

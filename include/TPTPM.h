@@ -11,6 +11,7 @@ using std::vector;
 #include "Matrix.h"
 
 class PHM;
+class DPM;
 
 /**
  * @author Brecht Verstichel
@@ -52,6 +53,8 @@ class TPTPM : public Matrix {
       void Q(const TPM &);
 
       void G(const PHM &);
+
+      void T(const DPM &);
 
       static int gn();
 
