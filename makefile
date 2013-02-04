@@ -51,7 +51,7 @@ all:
 	@echo
 	@echo '  +++ Building $(BINNAME)...'
 	@echo	
-	$(MAKE) $(BRIGHT_ROOT)/$(BINNAME) DEFS="-DPQGT"
+	$(MAKE) $(BRIGHT_ROOT)/$(BINNAME) DEFS="-DPQ"
 	@if test $?; then \
 	   echo; echo '*************** FAILED! ***************' ; echo; \
 	 else \
@@ -62,6 +62,19 @@ all:
 #------------------------------------------------------------------------------
 #  Compile with only P and Q conditions activated
 #------------------------------------------------------------------------------
+
+P:
+	@echo
+	@echo '  +++ Building $(BINNAME) with only the P condition'
+	@echo	
+	$(MAKE) $(BRIGHT_ROOT)/$(BINNAME) 
+	@if test $?; then \
+	   echo; echo '*************** FAILED! ***************' ; echo; \
+	 else \
+	   echo; echo '  +++ $(BINNAME) has been built, with only the P condition, successfully!'; \
+	   echo; \
+	 fi
+
 
 PQ:
 	@echo
