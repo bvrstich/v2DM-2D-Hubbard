@@ -98,6 +98,14 @@ class TPM : public BlockMatrix {
 
       void bar(const PPHM &);
 
+      static int gblock_char(int,int);
+
+      static int gt2s(int,int,int);
+
+      static int gs2t(int,int,int);
+
+      static int gdim(int);
+
       static void init();
 
       static void clear();

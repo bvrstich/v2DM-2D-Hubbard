@@ -20,7 +20,9 @@ CPPSRC	= 2D_hub.cpp\
             SUP.cpp\
             EIG.cpp\
             Hamiltonian.cpp\
-            Tools.cpp
+            Tools.cpp\
+            Basis.cpp\
+            TPTPM.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 

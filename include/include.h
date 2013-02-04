@@ -51,6 +51,9 @@
 #include "SUP.h"
 #include "EIG.h"
 
+#include "TPTPM.h"
+#include "Basis.h"
+
 #include "Hamiltonian.h"
 
 #include "Tools.h"

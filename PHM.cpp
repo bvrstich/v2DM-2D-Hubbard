@@ -370,4 +370,110 @@ void PHM::bar(const PPHM &pphm){
 
 }
 
+
+/**
+ * The G map, maps a TPM object on a PHM object.
+ * @param tpm input TPM
+ */
+void PHM::G(int option,const TPM &tpm){
+
+   if(option == 1){
+
+      //construct the SPM corresponding to the TPM
+      SPM spm;
+      spm.bar(1.0/(Tools::gN() - 1.0),tpm);
+
+      int a,b,c,d;
+
+      int S;
+
+      for(int B = 0;B < gnr();++B){
+
+         S = block_char[B][0];
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = ph2s[B][i][0];
+
+            //transform k_b to tpm sp-momentum:
+            b = Hamiltonian::bar(ph2s[B][i][1]);
+
+            for(int j = i;j < gdim(B);++j){
+
+               c = ph2s[B][j][0];
+
+               //transform k_d to tpm sp-momentum:
+               d = Hamiltonian::bar(ph2s[B][j][1]);
+
+               (*this)(B,i,j) = - Tools::g6j(0,0,0,S) * tpm(0,a,d,c,b) - 3.0 * Tools::g6j(0,0,1,S) * tpm(1,a,d,c,b);
+
+               if(a == d)
+                  (*this)(B,i,j) *= std::sqrt(2.0);
+
+               if(b == c)
+                  (*this)(B,i,j) *= std::sqrt(2.0);
+
+            }
+
+            (*this)(B,i,i) += spm[a];
+
+         }
+
+      }
+
+      this->symmetrize();
+
+   }
+   else{
+
+      //construct the SPM corresponding to the TPM
+      SPM spm;
+      spm.bar(1.0/(Tools::gN() - 1.0),tpm);
+
+      int a,b,c,d;
+
+      int S;
+
+      for(int B = 0;B < gnr();++B){
+
+         S = block_char[B][0];
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = ph2s[B][i][0];
+
+            //transform k_b to tpm sp-momentum:
+            b = Hamiltonian::bar(ph2s[B][i][1]);
+
+            for(int j = i;j < gdim(B);++j){
+
+               c = ph2s[B][j][0];
+
+               //transform k_d to tpm sp-momentum:
+               d = Hamiltonian::bar(ph2s[B][j][1]);
+
+               (*this)(B,i,j) = - Tools::g6j(0,0,0,S) * tpm(0,a,d,c,b) - 3.0 * Tools::g6j(0,0,1,S) * tpm(1,a,d,c,b);
+
+               if(a == d)
+                  (*this)(B,i,j) *= std::sqrt(2.0);
+
+               if(b == c)
+                  (*this)(B,i,j) *= std::sqrt(2.0);
+
+            }
+
+            (*this)(B,i,i) += spm[a];
+
+         }
+
+      }
+
+      this->symmetrize();
+
+
+
+   }
+
+}
+
 /* vim: set ts=3 sw=3 expandtab :*/

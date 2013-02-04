@@ -51,6 +51,8 @@ class PHM : public BlockMatrix {
 
       void G(const TPM &);
 
+      void G(int,const TPM &);
+
       void out_sp(const char *) const;
 
       void bar(const PPHM &);

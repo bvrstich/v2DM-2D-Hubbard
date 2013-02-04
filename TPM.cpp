@@ -1060,3 +1060,27 @@ void TPM::bar(const PPHM &pphm){
    this->symmetrize();
 
 }
+
+int TPM::gblock_char(int B,int option){
+
+   return block_char[B][option];
+
+}
+
+int TPM::gt2s(int B,int i,int option){
+
+   return t2s[B][i][option];
+
+}
+
+int TPM::gs2t(int B,int a,int b){
+
+   return s2t[B][a][b];
+
+}
+
+int TPM::gdim(int B){
+
+   return t2s[B].size();
+
+}

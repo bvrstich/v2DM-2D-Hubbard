@@ -36,8 +36,8 @@ int main(int argc,char *argv[]){
 
    cout.precision(10);
 
-   int L = 3;//atoi(argv[1]);//dimension of the lattice, nr of sites
-   int N = 9;//atoi(argv[2]);//nr of particles
+   int L = 4;//atoi(argv[1]);//dimension of the lattice, nr of sites
+   int N = 16;//atoi(argv[2]);//nr of particles
 
    double U = 1;//atof(argv[3]);//onsite repulsion
 
@@ -59,6 +59,25 @@ int main(int argc,char *argv[]){
    PPHM::init();
 #endif
 
+   TPTPM::init();
+
+   PHM phm;
+
+   ifstream in("phm.in");
+
+   for(int B = 0;B < phm.gnr();++B)
+      for(int i = 0;i < phm.gdim(B);++i)
+         for(int j = i;j < phm.gdim(B);++j)
+            in >> B >> i >> j >> phm(B,i,j);
+
+   phm.symmetrize();
+
+   TPTPM tpmm;
+   tpmm.G(phm);
+
+   cout << tpmm;
+
+/*
    TPM ham;
    ham.hubbard(U);
 
@@ -125,6 +144,8 @@ int main(int argc,char *argv[]){
    cout << "Final Energy:\t" << ham.ddot(rdm) << endl;
    cout << endl;
    cout << "Final Spin:\t" << rdm.spin() << endl;
+*/
+   TPTPM::clear();
 
 #ifdef __T2_CON
    PPHM::clear();
