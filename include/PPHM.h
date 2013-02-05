@@ -59,6 +59,8 @@ class PPHM : public BlockMatrix {
       //maak een PPHM van een TPM via de T2 conditie
       void T(const TPM &);
 
+      void T(int,const TPM &);
+
       //output to file
       void out_sp(const char *) const;
 

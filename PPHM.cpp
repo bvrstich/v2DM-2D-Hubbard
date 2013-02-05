@@ -675,4 +675,493 @@ void PPHM::out_sp(const char *filename) const{
 
 }
 
+/**
+ * The spincoupled, translationally invariant T2 map, maps a TPM onto a PPHM object. See notes for more info
+ * be aware that the c and z in the T2 notation are holes and transform in TPM space (remember the G-map)
+ * @param tpm input TPM matrix
+ */
+void PPHM::T(int option,const TPM &tpm){
+
+   if(option == 1){
+
+      SPM spm;
+      spm.bar(1.0/(Tools::gN() - 1.0),tpm);
+
+      int a,b,c,d,e,z;
+      int S_ab,S_de;
+
+      double norm_ab,norm_de;
+      int sign_ab,sign_de;
+
+      //first the S = 1/2 blocks, these should be the most difficult ones.
+      for(int B = 0;B < Tools::gL()*Tools::gL();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            S_ab = pph2s[B][i][0];
+
+            a = pph2s[B][i][1];
+            b = pph2s[B][i][2];
+
+            //change to tp-notation:
+            c = Hamiltonian::bar(pph2s[B][i][3]);
+
+            sign_ab = 1 - 2*S_ab;
+
+            norm_ab = 1.0;
+
+            if(a == b)
+               norm_ab /= std::sqrt(2.0);
+
+            for(int j = i;j < gdim(B);++j){
+
+               S_de = pph2s[B][j][0];
+
+               d = pph2s[B][j][1];
+               e = pph2s[B][j][2];
+
+               //change to tp-notation:
+               z = Hamiltonian::bar(pph2s[B][j][3]);
+
+               sign_de = 1 - 2*S_de;
+
+               norm_de = 1.0;
+
+               if(d == e)
+                  norm_de /= std::sqrt(2.0);
+
+               //start the map: init
+               (*this)(B,i,j) = 0.0;
+
+               //sp term becomes diagonal here:
+               if(i == j)
+                  (*this)(B,i,j) += spm[c];
+
+               //tp(1)
+               if(c == z)
+                  if(S_ab == S_de)
+                     (*this)(B,i,j) += tpm(S_ab,a,b,d,e);
+
+               //tp(2)
+               if(a == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,e,z,b);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+               //tp(3)
+               if(b == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,e,z,a);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_ab * ward;
+
+               }
+
+               //tp(4)
+               if(a == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,d,z,b);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_de * ward;
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,d,z,a);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_ab * sign_de * ward;
+
+               }
+
+            }
+
+         }
+
+      }
+
+      //the easier S = 3/2 part:
+      for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = pph2s[B][i][1];
+            b = pph2s[B][i][2];
+
+            //change to correct sp-momentum
+            c = Hamiltonian::bar(pph2s[B][i][3]);
+
+            for(int j = i;j < gdim(B);++j){
+
+               d = pph2s[B][j][1];
+               e = pph2s[B][j][2];
+
+               //change to correct sp-momentum
+               z = Hamiltonian::bar(pph2s[B][j][3]);
+
+               //init
+               (*this)(B,i,j) = 0.0;
+
+               //sp part is diagonal
+               if(i == j)
+                  (*this)(B,i,j) += spm[c];
+
+               //tp(1)
+               if(c == z)
+                  (*this)(B,i,j) += tpm(1,a,b,d,e);
+
+               //tp(2)
+               if(a == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,e,z,b);
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+               //tp(3)
+               if(b == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,e,z,a);
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += ward;
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,d,z,a);
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+            }
+
+         }
+
+      }
+
+      this->symmetrize();
+
+   }
+   else{
+
+
+      SPM spm;
+      spm.bar(1.0/(Tools::gN() - 1.0),tpm);
+
+      int a,b,c,d,e,z;
+      int S_ab,S_de;
+
+      double norm_ab,norm_de;
+      int sign_ab,sign_de;
+
+      //first the S = 1/2 blocks, these should be the most difficult ones.
+      for(int B = 0;B < Tools::gL()*Tools::gL();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            S_ab = pph2s[B][i][0];
+
+            a = pph2s[B][i][1];
+            b = pph2s[B][i][2];
+
+            //change to tp-notation:
+            c = Hamiltonian::bar(pph2s[B][i][3]);
+
+            sign_ab = 1 - 2*S_ab;
+
+            norm_ab = 1.0;
+
+            if(a == b)
+               norm_ab /= std::sqrt(2.0);
+
+            for(int j = i;j < gdim(B);++j){
+
+               S_de = pph2s[B][j][0];
+
+               d = pph2s[B][j][1];
+               e = pph2s[B][j][2];
+
+               //change to tp-notation:
+               z = Hamiltonian::bar(pph2s[B][j][3]);
+
+               sign_de = 1 - 2*S_de;
+
+               norm_de = 1.0;
+
+               if(d == e)
+                  norm_de /= std::sqrt(2.0);
+
+               //start the map: init
+               (*this)(B,i,j) = 0.0;
+
+               //sp term becomes diagonal here:
+               if(i == j)
+                  (*this)(B,i,j) += spm[c];
+
+               //tp(1)
+               if(c == z)
+                  if(S_ab == S_de)
+                     (*this)(B,i,j) += tpm(S_ab,a,b,d,e);
+
+               //tp(2)
+               if(a == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,e,z,b);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+               //tp(3)
+               if(b == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,e,z,a);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_ab * ward;
+
+               }
+
+               //tp(4)
+               if(a == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,d,z,b);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_de * ward;
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g9j(0,Z,S_ab,S_de) * tpm(Z,c,d,z,a);
+
+                  ward *= norm_ab * norm_de * std::sqrt( (2.0*S_ab + 1.0) * (2.0*S_de + 1.0) );
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= sign_ab * sign_de * ward;
+
+               }
+
+            }
+
+         }
+
+      }
+
+      //the easier S = 3/2 part:
+      for(int B = Tools::gL()*Tools::gL();B < Tools::gM();++B){
+
+         for(int i = 0;i < gdim(B);++i){
+
+            a = pph2s[B][i][1];
+            b = pph2s[B][i][2];
+
+            //change to correct sp-momentum
+            c = Hamiltonian::bar(pph2s[B][i][3]);
+
+            for(int j = i;j < gdim(B);++j){
+
+               d = pph2s[B][j][1];
+               e = pph2s[B][j][2];
+
+               //change to correct sp-momentum
+               z = Hamiltonian::bar(pph2s[B][j][3]);
+
+               //init
+               (*this)(B,i,j) = 0.0;
+
+               //sp part is diagonal
+               if(i == j)
+                  (*this)(B,i,j) += spm[c];
+
+               //tp(1)
+               if(c == z)
+                  (*this)(B,i,j) += tpm(1,a,b,d,e);
+
+               //tp(2)
+               if(a == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,e,z,b);
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == b)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+               //tp(3)
+               if(b == d){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,e,z,a);
+
+                  if(c == e)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) += ward;
+
+               }
+
+               //tp(5)
+               if(b == e){
+
+                  double ward = 0.0;
+
+                  for(int Z = 0;Z < 2;++Z)
+                     ward += (2*Z + 1.0) * Tools::g6j(0,0,1,Z) * tpm(Z,c,d,z,a);
+
+                  if(c == d)
+                     ward *= std::sqrt(2.0);
+
+                  if(z == a)
+                     ward *= std::sqrt(2.0);
+
+                  (*this)(B,i,j) -= ward;
+
+               }
+
+            }
+
+         }
+
+      }
+
+      this->symmetrize();
+
+   }
+
+}
+
 /* vim: set ts=3 sw=3 expandtab :*/

@@ -61,19 +61,19 @@ int main(int argc,char *argv[]){
 
    TPTPM::init();
 
-   DPM dpm;
+   PPHM pphm;
 
-   ifstream in("dpm.in");
+   ifstream in("pphm.in");
 
-   for(int B = 0;B < dpm.gnr();++B)
-      for(int i = 0;i < dpm.gdim(B);++i)
-         for(int j = i;j < dpm.gdim(B);++j)
-            in >> B >> i >> j >> dpm(B,i,j);
+   for(int B = 0;B < pphm.gnr();++B)
+      for(int i = 0;i < pphm.gdim(B);++i)
+         for(int j = i;j < pphm.gdim(B);++j)
+            in >> B >> i >> j >> pphm(B,i,j);
 
-   dpm.symmetrize();
+   pphm.symmetrize();
 
    TPTPM tpmm;
-   tpmm.T(dpm);
+   tpmm.T(pphm);
 
    cout << tpmm;
 
