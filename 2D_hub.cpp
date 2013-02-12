@@ -36,8 +36,8 @@ int main(int argc,char *argv[]){
 
    cout.precision(10);
 
-   int L = 4;//atoi(argv[1]);//dimension of the lattice, nr of sites
-   int N = 16;//atoi(argv[2]);//nr of particles
+   int L = 3;//atoi(argv[1]);//dimension of the lattice, nr of sites
+   int N = 9;//atoi(argv[2]);//nr of particles
 
    double U = 1;//atof(argv[3]);//onsite repulsion
 
