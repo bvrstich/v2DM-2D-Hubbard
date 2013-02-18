@@ -29,10 +29,10 @@ int main(int argc,char **argv)
    cout.precision(10);
 
    // these are the default values
-   int L = 3;//dim sp hilbert space
-   int N = 9;//nr of particles
+   int L = 6;//dim sp hilbert space
+   int N = 36;//nr of particles
 
-   double U = 1;//onsite interaction strength
+   double U = 4;//onsite interaction strength
 
    Tools::init(L,N);
 
@@ -91,7 +91,7 @@ int main(int argc,char **argv)
    //what does this do?
    double sigma = 1.0;
 
-   double tolerance = 1.0e-7;
+   double tolerance = 1.0e-6;
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
@@ -185,6 +185,14 @@ int main(int argc,char **argv)
    cout << "pd gap: " << Z.ddot(X) << endl;
    cout << "dual conv: " << D_conv << endl;
    cout << "primal conv: " << P_conv << endl;
+
+   ofstream out("tpm.out");
+   out.precision(15);
+
+   for(int B = 0;B < Z.tpm(0).gnr();++B)
+      for(int i = 0;i < Z.tpm(0).gdim(B);++i)
+         for(int j = i;j < Z.tpm(0).gdim(B);++j)
+            out << B << "\t" << i << "\t" << j << "\t" << Z.tpm(0)(B,i,j) << endl;
 
 #ifdef __T2_CON
    PPHM::clear();
