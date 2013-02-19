@@ -99,6 +99,12 @@ class TPM : public BlockMatrix {
 
       void T(const PPHM &);
 
+      int SaveToFile(const char *) const;
+
+      int ReadfromFile(const char *);
+
+      static int ReadInitfromFile(const char *filename, int &L, int &N, double &U);
+
       static void init();
 
       static void clear();

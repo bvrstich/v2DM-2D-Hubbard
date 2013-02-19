@@ -6,8 +6,10 @@
 *.out
 *.png
 *.gif
+*.h5
 callgrind.out.*
 2D_hub
+read
 tags
 docs
 workspace

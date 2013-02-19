@@ -186,13 +186,7 @@ int main(int argc,char **argv)
    cout << "dual conv: " << D_conv << endl;
    cout << "primal conv: " << P_conv << endl;
 
-   ofstream out("tpm.out");
-   out.precision(15);
-
-   for(int B = 0;B < Z.tpm(0).gnr();++B)
-      for(int i = 0;i < Z.tpm(0).gdim(B);++i)
-         for(int j = i;j < Z.tpm(0).gdim(B);++j)
-            out << B << "\t" << i << "\t" << j << "\t" << Z.tpm(0)(B,i,j) << endl;
+   Z.tpm(0).SaveToFile("output.h5");
 
 #ifdef __T2_CON
    PPHM::clear();

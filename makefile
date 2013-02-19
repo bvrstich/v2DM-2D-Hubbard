@@ -32,7 +32,7 @@ BRIGHT_ROOT= .
 
 INCLUDE = ./include
 
-LIBS= -llapack -lblas -lgsl
+LIBS= -llapack -lblas -lgsl -lhdf5
 
 CC	= gcc
 CXX	= g++
@@ -165,5 +165,9 @@ clean:
 # -----------------------------------------------------------------------------
 doc:
 	@doxygen doc-config
+
+read: read.cpp $(CPPSRC:2D_hub.cpp=)
+	$(MAKE) read.o $(OBJ:2D_hub.o=) DEFS="-DPQG"
+	$(CXX) $(LDFLAGS) $(SFLAGS) -o read read.o $(OBJ:2D_hub.o=) $(LIBS)
 
 # ====================== End of file 'makefile.in' ========================== #

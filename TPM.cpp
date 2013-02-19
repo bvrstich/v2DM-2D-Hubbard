@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <hdf5.h>
 
 using std::ostream;
 using std::ofstream;
@@ -1073,6 +1074,274 @@ void TPM::bar(const PPHM &pphm){
 
    this->symmetrize();
 
+}
+
+int TPM::SaveToFile(const char *filename) const
+{
+   int N = Tools::gN();
+   int L = Tools::gL();
+
+   hid_t       file_id, group_id, dataset_id, attribute_id, dataspace_id, strtype;
+   hsize_t     dims = 1;
+   herr_t      status;
+
+   // new file
+   file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+   // make group for rdm
+   group_id = H5Gcreate(file_id, "/RDM", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+   for(int i=0;i<this->gnr();i++)
+   {
+      hsize_t dimblock = this->gdim(i)*this->gdim(i);
+
+      // make dataspace for a block
+      dataspace_id = H5Screate_simple(1, &dimblock, NULL);
+
+      char name[16];
+      sprintf(name,"/RDM/%d",i);
+
+      // make dataset
+      dataset_id = H5Dcreate(file_id, name, H5T_IEEE_F64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+      double **matrix = (const_cast<Matrix &> ((*this)[i])).gMatrix();
+
+      // fill dataset
+      status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, matrix[0] );
+      HDF5_STATUS_CHECK(status);
+
+      /* Terminate access to the data space. */
+      status = H5Sclose(dataspace_id);
+      HDF5_STATUS_CHECK(status);
+
+      /* End access to the dataset and release resources used by it. */
+      status = H5Dclose(dataset_id);
+      HDF5_STATUS_CHECK(status);
+
+   }
+
+   int nr_blocks = this->gnr();
+   dataspace_id = H5Screate(H5S_SCALAR);
+
+   attribute_id = H5Acreate (group_id, "Blocks", H5T_STD_I64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   status = H5Awrite (attribute_id, H5T_NATIVE_INT, &nr_blocks );
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+   attribute_id = H5Acreate (group_id, "N", H5T_STD_I64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   status = H5Awrite (attribute_id, H5T_NATIVE_INT, &N );
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+   attribute_id = H5Acreate (group_id, "L", H5T_STD_I64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   status = H5Awrite (attribute_id, H5T_NATIVE_INT, &L );
+   HDF5_STATUS_CHECK(status)
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Sclose(dataspace_id);
+   HDF5_STATUS_CHECK(status);
+
+   dims = 6;
+   dataspace_id = H5Screate_simple(1, &dims, NULL);
+
+   int typeofcalculation[6];
+
+   typeofcalculation[0] = 1; // P
+
+   typeofcalculation[1] = 1; // Q
+
+#ifdef __G_CON
+   typeofcalculation[2] = 1; // G
+#else
+   typeofcalculation[2] = 0; // Q
+#endif
+
+#ifdef __T1_CON
+   typeofcalculation[3] = 1; // T1
+#else
+   typeofcalculation[3] = 0; // Q
+#endif
+
+#ifdef __T2_CON
+   typeofcalculation[4] = 1; // T2
+#else
+   typeofcalculation[4] = 0; // Q
+#endif
+
+#ifdef __T2P_CON
+   typeofcalculation[5] = 1; // T2P
+#else
+   typeofcalculation[5] = 0; // Q
+#endif
+
+   attribute_id = H5Acreate (group_id, "Type", H5T_STD_I64LE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   status = H5Awrite (attribute_id, H5T_NATIVE_INT, &typeofcalculation[0] );
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Sclose(dataspace_id);
+   HDF5_STATUS_CHECK(status);
+
+   /* Close the group. */
+   status = H5Gclose(group_id);
+   HDF5_STATUS_CHECK(status);
+
+   /* Terminate access to the file. */
+   status = H5Fclose(file_id);
+   HDF5_STATUS_CHECK(status);
+
+   return 0;
+}
+
+int TPM::ReadfromFile(const char *filename)
+{
+   hid_t       file_id, group_id, dataset_id;
+   herr_t      status;
+
+   // open file
+   file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+   HDF5_STATUS_CHECK(file_id);
+
+   // open group for rdm
+   group_id = H5Gopen(file_id, "/RDM", H5P_DEFAULT);
+   HDF5_STATUS_CHECK(group_id);
+
+   for(int i=0;i<this->gnr();i++)
+   {
+      char name[16];
+      sprintf(name,"/RDM/%d",i);
+
+      // make dataset
+      dataset_id = H5Dopen(group_id, name, H5P_DEFAULT);
+      HDF5_STATUS_CHECK(dataset_id);
+
+      double **matrix = (*this)[i].gMatrix();
+
+      // fill dataset
+      status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, matrix[0]);
+      HDF5_STATUS_CHECK(status);
+
+      status = H5Dclose(dataset_id);
+      HDF5_STATUS_CHECK(status);
+   }
+
+   status = H5Gclose(group_id);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Fclose(file_id);
+   HDF5_STATUS_CHECK(status);
+
+   return 0;
+}
+
+int TPM::ReadInitfromFile(const char *filename, int &L, int &N, double &U)
+{
+   hid_t file_id, group_id, attribute_id, strtype, dataspace_id;
+   herr_t status;
+   size_t sdim;
+   hsize_t dims = 6;
+
+   // open file
+   file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+   HDF5_STATUS_CHECK(file_id);
+
+   // open group for rdm
+   group_id = H5Gopen(file_id, "/RDM", H5P_DEFAULT);
+   HDF5_STATUS_CHECK(group_id);
+
+   status = H5Aexists(group_id,"Type");
+   HDF5_STATUS_CHECK(status);
+
+   if(status == 0)
+      std::cerr << "HDF5 input file '" << filename << "' has no information about the type of calculation (P,Q,G,T1 or T2)." << std::endl;
+   else
+   {
+      dataspace_id = H5Screate_simple(1, &dims, NULL);
+
+      int typeofcalculation[6];
+
+      attribute_id = H5Aopen(group_id, "Type", H5P_DEFAULT);
+      HDF5_STATUS_CHECK(attribute_id);
+
+      status = H5Aread(attribute_id, H5T_NATIVE_INT, &typeofcalculation[0]);
+      HDF5_STATUS_CHECK(status);
+
+      status = H5Aclose(attribute_id);
+      HDF5_STATUS_CHECK(status);
+
+      status = H5Sclose(dataspace_id);
+      HDF5_STATUS_CHECK(status);
+
+#ifdef __G_CON
+      if(typeofcalculation[2] == 0)
+         std::cerr << "HDF5 input file '" << filename << "' hasn't got the G condition active while the program has" << std::endl;
+#else
+      if(typeofcalculation[2] == 1)
+         std::cerr << "HDF5 input file '" << filename << "' has got the G condition active while the program has not" << std::endl;
+#endif
+
+#ifdef __T1_CON
+      if(typeofcalculation[3] == 0)
+         std::cerr << "HDF5 input file '" << filename << "' hasn't got the T1 condition active while the program has" << std::endl;
+#else
+      if(typeofcalculation[3] == 1)
+         std::cerr << "HDF5 input file '" << filename << "' has got the T1 condition active while the program has not" << std::endl;
+#endif
+
+#ifdef __T2_CON
+      if(typeofcalculation[4] == 0)
+         std::cerr << "HDF5 input file '" << filename << "' hasn't got the T2 condition active while the program has" << std::endl;
+#else
+      if(typeofcalculation[4] == 1)
+         std::cerr << "HDF5 input file '" << filename << "' has got the T2 condition active while the program has not" << std::endl;
+#endif
+
+#ifdef __T2P_CON
+      if(typeofcalculation[5] == 0)
+         std::cerr << "HDF5 input file '" << filename << "' hasn't got the T2P condition active while the program has" << std::endl;
+#else
+      if(typeofcalculation[5] == 1)
+         std::cerr << "HDF5 input file '" << filename << "' has got the T2P condition active while the program has not" << std::endl;
+#endif
+
+   }
+
+   attribute_id = H5Aopen(group_id,"L", H5P_DEFAULT);
+   HDF5_STATUS_CHECK(attribute_id);
+
+   // fill dataset
+   status = H5Aread(attribute_id, H5T_NATIVE_INT, &L);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+
+   attribute_id = H5Aopen(group_id,"N", H5P_DEFAULT);
+   HDF5_STATUS_CHECK(attribute_id);
+
+   // fill dataset
+   status = H5Aread(attribute_id, H5T_NATIVE_INT, &N);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Aclose(attribute_id);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Gclose(group_id);
+   HDF5_STATUS_CHECK(status);
+
+   status = H5Fclose(file_id);
+   HDF5_STATUS_CHECK(status);
+
+   return 0;
 }
 
 /* vim: set ts=3 sw=3 expandtab :*/
