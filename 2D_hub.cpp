@@ -55,144 +55,33 @@ int main(int argc,char **argv)
    SUP::init(L,N);
    EIG::init(L,N);
 
-   //hamiltoniaan
-   TPM ham;
-   ham.hubbard(U);
+   sTPM::init();
 
-   TPM ham_copy(ham);
+   ifstream in("/home/bright/bestanden/results/2D_hub/PQG/DM_out/6x6/N36/U4.dm");
 
-   //only traceless hamiltonian needed in program.
-   ham.proj_Tr();
+   TPM tpm;
 
-   //primal
-   SUP X;
+   for(int B = 0;B < tpm.gnr();++B)
+      for(int i = 0;i < tpm.gdim(B);++i)
+         for(int j = i;j < tpm.gdim(B);++j)
+            in >> B >> i >> j >> tpm(B,i,j);
 
-   //dual
-   SUP Z;
+   tpm.symmetrize();
 
-   //Lagrange multiplier
-   SUP V;
+   SPM spm;
+   spm.bar(1.0/(N - 1.0),tpm);
 
-   //just dubya
-   SUP W;
+   sSPM sspm;
+   sspm.transform(spm);
 
-   SUP u_0;
+   double ward = 0.0;
 
-   //little help
-   TPM hulp;
+   for(int i = 0;i < Tools::gL();++i)
+      ward += sspm[i];
 
-   u_0.tpm(0).unit();
+   cout << 2.0 * ward << endl;
 
-   u_0.fill();
-
-   X = 0.0;
-   Z = 0.0;
-
-   //what does this do?
-   double sigma = 1.0;
-
-   double tolerance = 1.0e-6;
-
-   double D_conv(1.0),P_conv(1.0),convergence(1.0);
-
-   // mazziotti uses 1.6 for this
-   double mazzy = 1.0;
-
-   int iter_dual,iter_primal(0);
-   int max_iter = 1;
-
-   while(P_conv > tolerance || D_conv > tolerance || fabs(convergence) > tolerance){
-
-      ++iter_primal;
-
-      D_conv = 1.0;
-
-      iter_dual = 0;
-
-      while(D_conv > tolerance  && iter_dual <= max_iter)
-      {
-
-         ++iter_dual;
-
-         //solve system
-         SUP B(Z);
-
-         B -= u_0;
-
-         B.daxpy(mazzy/sigma,X);
-
-         TPM b;
-
-         b.collaps(1,B);
-
-         b.daxpy(-mazzy/sigma,ham);
-
-         hulp.S(-1,b);
-
-         //hulp is the matrix containing the gamma_i's
-         hulp.proj_Tr();
-
-         //construct W
-         W.fill(hulp);
-
-         W += u_0;
-
-         W.daxpy(-1.0/sigma,X);
-
-         //update Z and V with eigenvalue decomposition:
-         W.sep_pm(Z,V);
-
-         V.dscal(-sigma);
-
-         //check infeasibility of the primal problem:
-         TPM v;
-
-         v.collaps(1,V);
-
-         v -= ham;
-
-         D_conv = sqrt(v.ddot(v));
-
-         //cout << "D\t\t\t" << D_conv << endl;
-
-     }
-
-      //update primal:
-      X = V;
-
-      //check dual feasibility (W is a helping variable now)
-      W.fill(hulp);
-
-      W += u_0;
-
-      W -= Z;
-
-      P_conv = sqrt(W.ddot(W));
-
-      if(D_conv < P_conv)
-         sigma *= 1.01;
-      else
-         sigma /= 1.01;
-
-      convergence = Z.tpm(0).ddot(ham) + u_0.ddot(X);
-
-      cout << P_conv << "\t" << D_conv << "\t" << sigma << "\t" << convergence << "\t" << ham_copy.ddot(Z.tpm(0)) << endl;
-
-   }
-
-   cout << endl;
-   cout << "Energy: " << ham_copy.ddot(Z.tpm(0)) << endl;
-   cout << "pd gap: " << Z.ddot(X) << endl;
-   cout << "dual conv: " << D_conv << endl;
-   cout << "primal conv: " << P_conv << endl;
-
-   ofstream out("tpm.out");
-   out.precision(15);
-
-   for(int B = 0;B < Z.tpm(0).gnr();++B)
-      for(int i = 0;i < Z.tpm(0).gdim(B);++i)
-         for(int j = i;j < Z.tpm(0).gdim(B);++j)
-            out << B << "\t" << i << "\t" << j << "\t" << Z.tpm(0)(B,i,j) << endl;
+   sTPM::clear();
 
 #ifdef __T2_CON
    PPHM::clear();

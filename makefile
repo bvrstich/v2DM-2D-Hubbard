@@ -20,7 +20,9 @@ CPPSRC	= 2D_hub.cpp\
             SUP.cpp\
             EIG.cpp\
             Hamiltonian.cpp\
-            Tools.cpp
+            Tools.cpp\
+            sTPM.cpp\
+            sSPM.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 
@@ -40,8 +42,8 @@ CXX	= g++
 # -----------------------------------------------------------------------------
 #   Compiler & Linker flags
 # -----------------------------------------------------------------------------
-CFLAGS	= -I$(INCLUDE) -g -Wall -O3 -flto -fopenmp
-LDFLAGS	= -g -Wall -O3 -flto -fopenmp
+CFLAGS	= -I$(INCLUDE) -g -Wall
+LDFLAGS	= -g -Wall
 
 
 # =============================================================================
