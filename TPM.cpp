@@ -277,24 +277,18 @@ ostream &operator<<(ostream &output,const TPM &tpm_p){
  * @param d second sp index that forms the tp column index j of block B, together with c
  * @return the number on place TPM(B,i,j) with the right phase.
  */
-double TPM::operator()(int B,int a,int b,int c,int d) const {
+double TPM::operator()(int S,int a,int b,int c,int d) const {
 
-   int S = block_char[B][0];
-   int K_x = block_char[B][1];
-   int K_y = block_char[B][2];
-
-   //check if momentum is ok
-   if( ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%Tools::gL() != K_x)
-      return 0;
-
-   if( ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%Tools::gL() != K_y)
-      return 0;
+   int K_x = ( Hamiltonian::ga_xy(a,0) + Hamiltonian::ga_xy(b,0) )%Tools::gL();
+   int K_y = ( Hamiltonian::ga_xy(a,1) + Hamiltonian::ga_xy(b,1) )%Tools::gL();
 
    if( ( Hamiltonian::ga_xy(c,0) + Hamiltonian::ga_xy(d,0) )%Tools::gL() != K_x)
       return 0;
 
    if( ( Hamiltonian::ga_xy(c,1) + Hamiltonian::ga_xy(d,1) )%Tools::gL() != K_y)
       return 0;
+
+   int B = char_block[S][K_x][K_y];
 
    if(S == 0){
 

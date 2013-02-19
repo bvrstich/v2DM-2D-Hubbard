@@ -68,18 +68,13 @@ int main(int argc,char **argv)
 
    tpm.symmetrize();
 
-   SPM spm;
-   spm.bar(1.0/(N - 1.0),tpm);
+   sTPM stpm;
+   stpm.transform(tpm);
 
-   sSPM sspm;
-   sspm.transform(spm);
+   sTPM ham;
+   ham.hubbard1D(0.0);
 
-   double ward = 0.0;
-
-   for(int i = 0;i < Tools::gL();++i)
-      ward += sspm[i];
-
-   cout << 2.0 * ward << endl;
+   cout << stpm.ddot(ham) << endl;
 
    sTPM::clear();
 

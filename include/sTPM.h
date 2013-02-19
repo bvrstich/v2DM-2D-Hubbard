@@ -51,6 +51,10 @@ class sTPM : public BlockMatrix {
 
       using BlockMatrix::operator();
 
+      void transform(const TPM &);
+
+      void hubbard1D(double);
+
       static void init();
 
       static void clear();
