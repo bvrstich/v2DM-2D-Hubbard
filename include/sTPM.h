@@ -53,7 +53,7 @@ class sTPM : public BlockMatrix {
 
       void transform(const TPM &);
 
-      void hubbard1D(double);
+      void hubbard1D_rep(double);
 
       static void init();
 

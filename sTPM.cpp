@@ -225,16 +225,13 @@ ostream &operator<<(ostream &output,const sTPM &stpm_p){
 
 }
 
-
 /**
- * construct the spinsymmetrical hubbard hamiltonian in momentum space with on site repulsion U
- * @param U onsite repulsion term
+ * fill the object with the on-site repulsion term of the 1D Hubbard hamiltonian
+ * @param U on-site repulsion strength
  */
-void sTPM::hubbard1D(double U){
+void sTPM::hubbard1D_rep(double U){
 
-   int k_a,k_b,k_c,k_d;//sp momentum 
-
-   double ward = 1.0/(Tools::gN() - 1.0);
+   int a,b,c,d;//sp momentum 
 
    int S;
 
@@ -244,30 +241,26 @@ void sTPM::hubbard1D(double U){
 
       for(int i = 0;i < gdim(B);++i){
 
-         k_a = t2s[B][i][0];
-         k_b = t2s[B][i][1];
+         a = t2s[B][i][0];
+         b = t2s[B][i][1];
 
          for(int j = i;j < gdim(B);++j){
 
-            k_c = t2s[B][j][0];
-            k_d = t2s[B][j][1];
+            c = t2s[B][j][0];
+            d = t2s[B][j][1];
 
             //init
             (*this)(B,i,j) = 0;
-
-            //hopping (kinetic energy):
-            if(i == j)
-               (*this)(B,i,i) = -2.0 * ward * ( cos(2.0*k_a*3.141592653589793238462 / (double) Tools::gL())  + cos(2.0*k_b*3.141592653589793238462 / (double) Tools::gL()) );
 
             //on-site repulsion
             if(S == 0){
 
                double ward = 2.0*U / (double) Tools::gL();
 
-               if(k_a == k_b)
+               if(a == b)
                   ward /= std::sqrt(2.0);
 
-               if(k_c == k_d)
+               if(c == d)
                   ward /= std::sqrt(2.0);
 
                (*this)(B,i,j) += ward;

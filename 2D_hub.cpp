@@ -57,7 +57,7 @@ int main(int argc,char **argv)
 
    sTPM::init();
 
-   ifstream in("/home/bright/bestanden/results/2D_hub/PQG/DM_out/6x6/N36/U4.dm");
+   ifstream in("/home/bright/bestanden/results/2D_hub/PQG/DM_out/6x6/N34/U8.dm");
 
    TPM tpm;
 
@@ -68,13 +68,14 @@ int main(int argc,char **argv)
 
    tpm.symmetrize();
 
-   sTPM stpm;
-   stpm.transform(tpm);
+   Stripe stripe(tpm);
 
-   sTPM ham;
-   ham.hubbard1D(0.0);
+   cout << stripe.gN() << "\t" << stripe.gnpairs() << endl;
 
-   cout << stpm.ddot(ham) << endl;
+   Stripe ham;
+   ham.hubbard1D(8.0);
+
+   cout << ham.ddot(stripe) << endl;
 
    sTPM::clear();
 

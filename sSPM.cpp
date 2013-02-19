@@ -74,3 +74,27 @@ void sSPM::transform(const SPM &spm){
    }
 
 }
+
+/**
+ * the kinetic energy part of the 1D hubbard hamiltonian
+ */
+void sSPM::hubbard1D_kin(){
+
+   for(int k = 0;k < Tools::gL();++k)
+      sspm[k] = -2.0 * cos( 2.0 * k * 3.141592653589793238462 / (double) Tools::gL() );
+
+}
+
+/**
+ * @return the dotproduct of two sSPM objects
+ */
+double sSPM::ddot(const sSPM &sspm_i) const {
+
+   double ward = 0.0;
+
+   for(int k = 0;k < Tools::gL();++k)
+      ward += sspm[k] * sspm_i[k];
+
+   return 2.0 * ward;//2 for degeneracy
+
+}

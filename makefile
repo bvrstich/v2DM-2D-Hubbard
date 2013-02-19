@@ -22,7 +22,8 @@ CPPSRC	= 2D_hub.cpp\
             Hamiltonian.cpp\
             Tools.cpp\
             sTPM.cpp\
-            sSPM.cpp
+            sSPM.cpp\
+            Stripe.cpp
 
 OBJ	= $(CPPSRC:.cpp=.o)
 

@@ -47,6 +47,10 @@ class sSPM {
 
       void transform(const SPM &);
 
+      void hubbard1D_kin();
+
+      double ddot(const sSPM &) const;
+
    private:
 
       double *sspm;
