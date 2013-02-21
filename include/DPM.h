@@ -78,6 +78,8 @@ class DPM : public BlockMatrix {
       //maak een DPM van een TPM via de hat functie
       void hat(const TPM &);
 
+      void print_eig(int,int) const;
+
       //output to file
       void out_sp(const char *) const;
 

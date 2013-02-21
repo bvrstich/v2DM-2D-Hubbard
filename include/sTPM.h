@@ -51,7 +51,9 @@ class sTPM : public BlockMatrix {
 
       using BlockMatrix::operator();
 
-      void transform(const TPM &);
+      void stripe(const TPM &);
+
+      void diagonal(const TPM &);
 
       void hubbard1D_rep(double);
 

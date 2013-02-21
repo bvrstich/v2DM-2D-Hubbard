@@ -32,24 +32,16 @@ int main(int argc,char **argv)
    int L = 6;//dim sp hilbert space
    int N = 36;//nr of particles
 
-   double U = 4;//onsite interaction strength
+   double U = 8;//onsite interaction strength
 
    Tools::init(L,N);
 
    Hamiltonian::init();
    TPM::init();
 
-#ifdef __G_CON
    PHM::init();
-#endif
-
-#ifdef __T1_CON
    DPM::init(L,N);
-#endif
-
-#ifdef __T2_CON
    PPHM::init(L,N);
-#endif
 
    SPM::init(L,N);
    SUP::init(L,N);
@@ -57,7 +49,7 @@ int main(int argc,char **argv)
 
    sTPM::init();
 
-   ifstream in("/home/bright/bestanden/results/2D_hub/PQG/DM_out/6x6/N34/U8.dm");
+   ifstream in("/home/bright/bestanden/results/2D_hub/PQG/DM_out/6x6/N36/U8.dm");
 
    TPM tpm;
 
@@ -68,28 +60,16 @@ int main(int argc,char **argv)
 
    tpm.symmetrize();
 
-   Stripe stripe(tpm);
+   sTPM stpm;
+   stpm.stripe(tpm);
 
-   cout << stripe.gN() << "\t" << stripe.gnpairs() << endl;
-
-   Stripe ham;
-   ham.hubbard1D(8.0);
-
-   cout << ham.ddot(stripe) << endl;
+   cout << stpm;
 
    sTPM::clear();
 
-#ifdef __T2_CON
    PPHM::clear();
-#endif
-
-#ifdef __T1_CON
    DPM::clear();
-#endif
-
-#ifdef __G_CON
    PHM::clear();
-#endif
 
    TPM::clear();
    Hamiltonian::clear();

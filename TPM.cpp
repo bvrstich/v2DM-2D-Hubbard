@@ -1069,4 +1069,36 @@ void TPM::bar(const PPHM &pphm){
 
 }
 
+/**
+ * print the eigenvector in block B with belonging to eigenvalue i
+ */
+void TPM::print_eig(int B,int i) const{
+
+   int S = block_char[B][0];
+   int K_x = block_char[B][1];
+   int K_y = block_char[B][2];
+
+   cout << "S =\t" << S << "\tK_x =\t" << K_x << "\tK_y =\t" << K_y << endl;
+   cout << std::endl;
+
+   int a,b;
+   int ax,ay,bx,by;
+
+   for(int j = 0;j < gdim(B);++j){
+
+      a = t2s[B][j][0];
+      b = t2s[B][j][1];
+
+      ax = Hamiltonian::ga_xy(a,0);
+      ay = Hamiltonian::ga_xy(a,1);
+
+      bx = Hamiltonian::ga_xy(b,0);
+      by = Hamiltonian::ga_xy(b,1);
+
+      cout << j << "\t|\t" << a << "\t" << b << "\t|\t(" << ax << "," << ay << ")\t(" << bx << "," << by << ")\t" << (*this)(B,j,i) << endl;
+
+   }
+
+}
+
 /* vim: set ts=3 sw=3 expandtab :*/

@@ -60,7 +60,10 @@ ostream &operator<<(ostream &output,const sSPM &sspm_p){
 
 }
 
-void sSPM::transform(const SPM &spm){
+/**
+ * produce the striped sSPM from a full lattice SPM
+ */
+void sSPM::stripe(const SPM &spm){
 
    for(int x = 0;x < Tools::gL();++x){
 
@@ -70,6 +73,24 @@ void sSPM::transform(const SPM &spm){
          sspm[x] += spm[Hamiltonian::gxy_a(x,y)];
 
       sspm[x] /= (double)Tools::gL();
+
+   }
+
+}
+
+/**
+ * produce the diagonal sSPM from a full lattice SPM
+ */
+void sSPM::diagonal(const SPM &spm){
+
+   for(int d = 0;d < Tools::gL();++d){
+
+      sspm[d] = 0;
+
+      for(int x = 0;x < Tools::gL();++x)
+         sspm[d] += spm[Hamiltonian::gxy_a(x,(d - x + Tools::gL())%Tools::gL())];
+
+      sspm[d] /= (double)Tools::gL();
 
    }
 

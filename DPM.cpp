@@ -1071,4 +1071,43 @@ void DPM::out_sp(const char *filename) const{
 
 }
 
+/**
+ * print the eigenvector in block B with belonging to eigenvalue i
+ */
+void DPM::print_eig(int B,int i) const{
+
+   int S = block_char[B][0];
+   int K_x = block_char[B][1];
+   int K_y = block_char[B][2];
+
+   cout << "S =\t" << S << "\tK_x =\t" << K_x << "\tK_y =\t" << K_y << endl;
+   cout << std::endl;
+
+   int S_ab;
+   int a,b,c;
+   int ax,ay,bx,by,cx,cy;
+
+   for(int j = 0;j < gdim(B);++j){
+
+      S_ab = dp2s[B][j][0];
+
+      a = dp2s[B][j][1];
+      b = dp2s[B][j][2];
+      c = dp2s[B][j][3];
+
+      ax = Hamiltonian::ga_xy(a,0);
+      ay = Hamiltonian::ga_xy(a,1);
+
+      bx = Hamiltonian::ga_xy(b,0);
+      by = Hamiltonian::ga_xy(b,1);
+
+      cx = Hamiltonian::ga_xy(c,0);
+      cy = Hamiltonian::ga_xy(c,1);
+
+      cout << j << "\t|\t" << a << "\t" << b << "\t" << c << "\t|\t(" << ax << "," << ay << ")\t(" << bx << "," << by << ")\t(" << cx << "," << cy << ")\t" << (*this)(B,j,i) << endl;
+
+   }
+
+}
+
 /* vim: set ts=3 sw=3 expandtab :*/

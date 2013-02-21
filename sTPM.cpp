@@ -156,7 +156,10 @@ sTPM::sTPM(const sTPM &tpm_c) : BlockMatrix(tpm_c){ }
  */
 sTPM::~sTPM(){ }
 
-void sTPM::transform(const TPM &tpm){
+/**
+ * transform a regular full lattice TPM to a (horizontal or vertical) stripe 
+ */
+void sTPM::stripe(const TPM &tpm){
 
    int a,b,c,d;
 

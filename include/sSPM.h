@@ -45,7 +45,9 @@ class sSPM {
 
       double operator[](int) const;
 
-      void transform(const SPM &);
+      void stripe(const SPM &);
+
+      void diagonal(const SPM &);
 
       void hubbard1D_kin();
 

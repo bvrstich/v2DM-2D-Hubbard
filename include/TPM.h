@@ -99,6 +99,8 @@ class TPM : public BlockMatrix {
 
       void T(const PPHM &);
 
+      void print_eig(int,int) const;
+
       static void init();
 
       static void clear();

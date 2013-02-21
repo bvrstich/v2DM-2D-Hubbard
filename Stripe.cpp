@@ -32,10 +32,10 @@ Stripe::Stripe(const TPM &tpm){
    spm.bar(1.0/(Tools::gN() - 1.0),tpm);
 
    sspm = new sSPM();
-   sspm->transform(spm);
+   sspm->stripe(spm);
 
    ttpm = new sTPM();
-   ttpm->transform(tpm);
+   ttpm->stripe(tpm);
 
 }
 
