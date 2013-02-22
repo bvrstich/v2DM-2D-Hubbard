@@ -32,7 +32,7 @@ int main(int argc,char **argv)
    int L = 6;//dim sp hilbert space
    int N = 36;//nr of particles
 
-   double U = 8;//onsite interaction strength
+   double U = 1;//onsite interaction strength
 
    Tools::init(L,N);
 
@@ -60,10 +60,7 @@ int main(int argc,char **argv)
 
    tpm.symmetrize();
 
-   sTPM stpm;
-   stpm.stripe(tpm);
-
-   cout << stpm;
+   cout << tpm.trace() << endl;
 
    sTPM::clear();
 

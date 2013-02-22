@@ -236,6 +236,13 @@ TPM::~TPM(){ }
 
 ostream &operator<<(ostream &output,const TPM &tpm_p){
 
+   int a,b,c,d;
+   
+   int ax,ay;
+   int bx,by;
+   int cx,cy;
+   int dx,dy;
+
    int S,K_x,K_y;
 
    for(int B = 0;B < tpm_p.gnr();++B){
@@ -250,15 +257,34 @@ ostream &operator<<(ostream &output,const TPM &tpm_p){
 
       output << std::endl;
 
-      for(int i = 0;i < tpm_p.gdim(B);++i)
+      for(int i = 0;i < tpm_p.gdim(B);++i){
+
+         a = tpm_p.t2s[B][i][0];
+         b = tpm_p.t2s[B][i][1];
+
+         ax = Hamiltonian::ga_xy(a,0);
+         ay = Hamiltonian::ga_xy(a,1);
+
+         bx = Hamiltonian::ga_xy(b,0);
+         by = Hamiltonian::ga_xy(b,1);
+
          for(int j = 0;j < tpm_p.gdim(B);++j){
 
-            output << i << "\t" << j << "\t|\t" << tpm_p.t2s[B][i][0] << "\t" << tpm_p.t2s[B][i][1]
+            c = tpm_p.t2s[B][j][0];
+            d = tpm_p.t2s[B][j][1];
 
-               << "\t" << tpm_p.t2s[B][j][0] << "\t" << tpm_p.t2s[B][j][1] << "\t" << tpm_p(B,i,j) << endl;
+            cx = Hamiltonian::ga_xy(c,0);
+            cy = Hamiltonian::ga_xy(c,1);
+
+            dx = Hamiltonian::ga_xy(d,0);
+            dy = Hamiltonian::ga_xy(d,1);
+
+            output << i << "\t" << j << "\t|\t" << a << "\t" << b << "\t" << c << "\t" << d << "\t|\t(" << ax << "," << ay << ")\t(" << bx << "," << by << ")\t("
+
+            << cx << "," << cy << ")\t(" << dx << "," << dy << ")\t|\t" << tpm_p(B,i,j) << endl;
 
          }
-
+      }
       output << std::endl;
 
    }
