@@ -612,7 +612,7 @@ void TPM::constr_grad(double t,const TPM &ham,const SUP &Z){
 }
 
 /**
- * solve the Tools::gN()ewton equations for the determination of the search direction,
+ * solve the Newton equations for the determination of the search direction,
  * @param t scaling factor of the potential
  * @param Z SUP matrix containing the inverse of the constraint matrices (carrier space matrices).
  * @param b right hand side (the gradient constructed int TPM::constr_grad)

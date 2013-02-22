@@ -67,6 +67,8 @@ int main(int argc,char *argv[]){
 
    TPM backup_rdm(rdm);
 
+   int tot_iter = 0;
+
    double t = 1.0;
    double tolerance = 1.0e-15;
 
@@ -104,6 +106,8 @@ int main(int argc,char *argv[]){
          //los het hessiaan stelsel op:
          nr_cg_iter += delta.solve(t,Z,grad);
 
+         tot_iter += nr_cg_iter;
+
          //line search
          double a = delta.line_search(t,Z,ham);
 
@@ -125,6 +129,8 @@ int main(int argc,char *argv[]){
    cout << "Final Energy:\t" << ham.ddot(rdm) << endl;
    cout << endl;
    cout << "Final Spin:\t" << rdm.spin() << endl;
+   cout << endl;
+   cout << tot_iter << endl;
 
 #ifdef __T2_CON
    PPHM::clear();
