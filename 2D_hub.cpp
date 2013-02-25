@@ -188,11 +188,6 @@ int main(int argc,char *argv[]){
    cout << tot_iter << endl;
    cout << endl;
 
-   SPM spm;
-   spm.bar(1.0/(N - 1.0),Z.gI());
-
-   cout << spm;
-
 #ifdef __T2_CON
    PPHM::clear();
 #endif
