@@ -95,7 +95,7 @@ int main(int argc,char *argv[]){
 
    double D_conv(1.0),P_conv(1.0),convergence(1.0);
 
-   double mazzy = 1.6;
+   double mazzy = 1.0;
 
    int iter;
    int max_iter = 1;
@@ -187,6 +187,9 @@ int main(int argc,char *argv[]){
    cout << endl;
    cout << tot_iter << endl;
    cout << endl;
+
+   BlockVector<TPM> v(Z.gI());
+   cout << v.max() << endl;
 
 #ifdef __T2_CON
    PPHM::clear();
